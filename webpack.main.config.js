@@ -9,3 +9,4 @@ module.exports = {
     rules: require('./webpack.rules'),
   },
 };
+

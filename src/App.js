@@ -1,6 +1,17 @@
-import React from "react";
+import React from "react"; 
+
 
 function App() {
+    // s ssconst xtermRef = useRef(null);
+
+    // useEffect(() => {
+    //     const xterm = new Terminal();
+    //     xterm.open(xtermRef.current);
+
+    //     xterm.writeln("Please enter any string then press enter:");
+    //     xterm.write("echo> ");
+    // }, []); // Empty dependency array ensures the effect runs only once after mount
+
     const styles = {
         container: {
           backgroundColor: 'black',
@@ -13,6 +24,8 @@ function App() {
           flexDirection: 'column',
         },
       };
+
+
   return (
     <div style={styles.container}>
       <h1>💻 Maxima ⚛️</h1>
@@ -27,3 +40,23 @@ function clickMe() {
   }
 
 export default App;
+
+     /* <XTerm
+                    ref={this.xtermRef}
+                    onData={(data) => {
+                        const code = data.charCodeAt(0);
+                        // If the user hits empty and there is something typed echo it.
+                        if (code === 13 && this.state.input.length > 0) {
+                            this.xtermRef.current.terminal.write(
+                                "\r\nYou typed: '" + this.state.input + "'\r\n"
+                            );
+                            this.xtermRef.current.terminal.write("echo> ");
+                            this.setState({input: ""})
+                        } else if (code < 32 || code === 127) { // Disable control Keys such as arrow keys
+                            return;
+                        } else { // Add general key press characters to the terminal
+                            this.xtermRef.current.terminal.write(data);
+                            this.setState({input: this.state.input + data})
+                        }
+                    }}
+                /> */
