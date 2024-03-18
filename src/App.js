@@ -14,6 +14,12 @@ function App() {
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
   const [input, setInput] = useState("");
   const [lastLine, setLastLine] = useState("");
+  const [code, setCode] = useState('');
+  const [file, setFile] = useState(); 
+  const [language, setLanguage] = useState('javascript');
+
+
+
   useEffect(() => {
     console.log("ran");
     ipcRenderer.on('pty-data', (event, data) => {
@@ -27,7 +33,26 @@ function App() {
      ipcRenderer.removeAllListeners('pty-data');
     };
   });
+  useEffect(() => {
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = async (e) => {
+        setCode(e.target.result);
+      };
+      reader.readAsText(file);
+      let newLanguage = 'javascript';
+      const extension = file.name.split('.').pop();
+      if (['css', 'html', 'python', 'dart'].includes(extension)) {
+        newLanguage = extension;
+      }
+      setLanguage(newLanguage);
+    }
+  }, [file]);
+
+
+
   loader.config({ monaco });
+
 
   const styles = {
     container: {
@@ -87,10 +112,17 @@ function App() {
       }
     }
   };
+
+  const handleFileChange = (event) => {
+    if (event.target.files) {
+      setFile(event.target.files[0]);
+    }
+  };
   return (
     <div style={styles.container}>
+      <input type="file" onChange={handleFileChange} /> 
       <div style={styles.editor}>
-        <Editor height="90vh" defaultLanguage="javascript" defaultValue="// some comment" theme="vs-dark" options={{
+        <Editor height="90vh" defaultLanguage="javascript" language={language} value={code} theme="vs-dark" options={{
             minimap: {
               enabled: false,
             },
