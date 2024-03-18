@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
-const { ipcRenderer } = window.require('electron');
-import {Xterm} from "xterm-react";
+const { ipcRenderer } = window.require("electron");
+import { Xterm } from "xterm-react";
 import "xterm/css/xterm.css";
 //import * as pty from 'node-pty';
 //import * as pty from 'node-pty';
@@ -47,7 +47,7 @@ function App() {
       cols: term.cols,
       // Add other necessary properties here
     };
-    ipcRenderer.send('asynchronous-message', terminalInfo);
+    ipcRenderer.send("asynchronous-message", terminalInfo);
   };
   const onTermDispose = (term) => {
     setTerminalDisplay(null);
@@ -57,42 +57,39 @@ function App() {
   //     TerminalDisplay.write(data);
   //   }
   // };
-  
+
   let count = 0;
   const handleData = (data) => {
-    console.log("interferred")
+    console.log("interferred");
     if (TerminalDisplay) {
-        const code = data.charCodeAt(0);
-        // If the user hits enter, submit the input
-        if (code === 13) {
-            ipcRenderer.send("user-input", input + "\r"); // Send input to pty
-            console.log("input is " + input);
-            setInput(""); // Clear the input
-        } else {
-            // Add general key press characters to the terminal
-            TerminalDisplay.write(data);
-            console.log("data is" + data);
-            
-            // Append non-enter key data to the input
-            //setZonsole((prevInput) => prevInput + data);
-            setInput((prevInput) => prevInput + data );
-        }
+      const code = data.charCodeAt(0);
+      // If the user hits enter, submit the input
+      if (code === 13) {
+        ipcRenderer.send("user-input", input + "\r"); // Send input to pty
+        console.log("input is " + input);
+        setInput(""); // Clear the input
+      } else {
+        // Add general key press characters to the terminal
+        TerminalDisplay.write(data);
+        console.log("data is" + data);
+
+        // Append non-enter key data to the input
+        //setZonsole((prevInput) => prevInput + data);
+        setInput((prevInput) => prevInput + data);
+      }
     }
-};
+  };
 
   ipcRenderer.on("pty-data", (event, data) => {
-    
-    if(data && TerminalDisplay) {
+    if (data && TerminalDisplay) {
       TerminalDisplay.write(data);
       console.log(data);
     }
   });
 
-  
   // ipcRenderer.on("pty-data", (event, data) => {
   //   handleData(data);
   // });
-
 
   return (
     <div style={styles.container}>
