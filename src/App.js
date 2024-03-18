@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 const { ipcRenderer } = window.require("electron");
 import { Xterm } from "xterm-react";
 import "xterm/css/xterm.css";
@@ -15,7 +15,18 @@ function App() {
   // };
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
   const [input, setInput] = useState("");
-
+  useEffect(() => {
+    console.log("ran");
+    ipcRenderer.on('pty-data', (event, data) => {
+      if (data && TerminalDisplay) {
+             TerminalDisplay.write(data);
+          }
+      // do stuffs
+    });
+    return () => {
+     ipcRenderer.removeAllListeners('pty-data');
+    };
+  });
   const styles = {
     container: {
       backgroundColor: "black",
@@ -70,7 +81,7 @@ function App() {
         setInput(""); // Clear the input
       } else {
         // Add general key press characters to the terminal
-        TerminalDisplay.write(data);
+       TerminalDisplay.write(data);
         console.log("data is" + data);
 
         // Append non-enter key data to the input
@@ -80,12 +91,11 @@ function App() {
     }
   };
 
-  ipcRenderer.on("pty-data", (event, data) => {
-    if (data && TerminalDisplay) {
-      TerminalDisplay.write(data);
-      console.log(data);
-    }
-  });
+  // ipcRenderer.on("pty-data", (event, data) => {
+  //   if (data && TerminalDisplay) {
+  //     TerminalDisplay.write(data);
+  //   }
+  // });
 
   // ipcRenderer.on("pty-data", (event, data) => {
   //   handleData(data);
