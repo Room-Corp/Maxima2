@@ -3,22 +3,22 @@ import { useState, useEffect } from "react";
 const { ipcRenderer } = window.require("electron");
 import { Xterm } from "xterm-react";
 import "xterm/css/xterm.css";
-//import * as pty from 'node-pty';
-//import * as pty from 'node-pty';
+import Editor, { loader } from '@monaco-editor/react';
+import * as monaco from "monaco-editor";
 
-// import * as pty from 'node-pty';
+
+
 
 function App() {
-  // const startProcess = () => {
-  //   const terminal = new Terminal();
-  //   ipcRenderer.send('asynchronous-message', TerminalDisplayl);
-  // };
+
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
   const [input, setInput] = useState("");
+  const [lastLine, setLastLine] = useState("");
   useEffect(() => {
     console.log("ran");
     ipcRenderer.on('pty-data', (event, data) => {
-      if (data && TerminalDisplay) {
+      if (data && TerminalDisplay && data != lastLine) {
+        console.log("data: " + data);
              TerminalDisplay.write(data);
           }
       // do stuffs
@@ -27,6 +27,8 @@ function App() {
      ipcRenderer.removeAllListeners('pty-data');
     };
   });
+  loader.config({ monaco });
+
   const styles = {
     container: {
       backgroundColor: "black",
@@ -43,11 +45,13 @@ function App() {
       bottom: 0,
       left: 0,
       width: "100%",
-      backgroundColor: "#f0f0f" /* Example background color */,
-      /* Example border */
-      padding: "20px" /* Example padding */,
+      backgroundColor: "#f0f0f", 
+      //padding: "10px" ,
       borderTop: "10px solid #f0f0f0",
     },
+    editor: {
+      width: "100%",
+    }
   };
 
   const onTermInit = (term) => {
@@ -59,19 +63,13 @@ function App() {
       // Add other necessary properties here
     };
     ipcRenderer.send("asynchronous-message", terminalInfo);
+    //ipcRenderer.send("user-input", "export PS1=\"\\\\u@\h \\\\W]\\\\$\"" + "\r");
   };
   const onTermDispose = (term) => {
     setTerminalDisplay(null);
   };
-  // const handleData = (data) => {
-  //   if (TerminalDisplay) {
-  //     TerminalDisplay.write(data);
-  //   }
-  // };
-
   let count = 0;
   const handleData = (data) => {
-    console.log("interferred");
     if (TerminalDisplay) {
       const code = data.charCodeAt(0);
       // If the user hits enter, submit the input
@@ -80,34 +78,26 @@ function App() {
         console.log("input is " + input);
         setInput(""); // Clear the input
       } else if(code == 127) {
-        setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
-        TerminalDisplay.write("\x1b[D\x1b[P")
+          setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
+          TerminalDisplay.write("\x1b[D\x1b[P");
       } else {
-        // Add general key press characters to the terminal
-       TerminalDisplay.write(data);
-        console.log("data is" + data);
-
-        // Append non-enter key data to the input
-        //setZonsole((prevInput) => prevInput + data);
+        TerminalDisplay.write(data);
+        //console.log("data is" + data);
         setInput((prevInput) => prevInput + data);
       }
     }
   };
-
-  // ipcRenderer.on("pty-data", (event, data) => {
-  //   if (data && TerminalDisplay) {
-  //     TerminalDisplay.write(data);
-  //   }
-  // });
-
-  // ipcRenderer.on("pty-data", (event, data) => {
-  //   handleData(data);
-  // });
-
   return (
     <div style={styles.container}>
-      <h1>💻 Maxima ⚛️</h1>
+      <div style={styles.editor}>
+        <Editor height="90vh" defaultLanguage="javascript" defaultValue="// some comment" theme="vs-dark" options={{
+            minimap: {
+              enabled: false,
+            },
+      }}/>
+        </div>
       <div style={styles.terminal}>
+    
         <Xterm
           onInit={onTermInit}
           onDispose={onTermDispose}

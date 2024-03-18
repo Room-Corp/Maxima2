@@ -1,4 +1,5 @@
 const rules = require('./webpack.rules');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 rules.push({
   test: /\.css$/,
@@ -10,5 +11,6 @@ module.exports = {
   module: {
     rules,
   },
+  plugins: [new MonacoWebpackPlugin()]
 };
 

@@ -59,18 +59,11 @@ const ptyProcess = pty.spawn(shell, [], {
   env: process.env,
 });
 
+
 ptyProcess.onData((data) => {
   mainWindow.webContents.send("pty-data", data);
-  console.log("data has been sent " + data);
+  console.log("data is " + data)
 });
-// ptyProcess.on("data", (data) => {
-//   mainWindow.webContents.send("pty-data", data);
-
-// });
-
-// ipcMain.on("user-input", (event, input) => {
-//   ptyProcess.write(input);
-// });
 
 ipcMain.on("user-input", (event, input) => {
   ptyProcess.write(input);
