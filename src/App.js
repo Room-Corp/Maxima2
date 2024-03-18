@@ -76,6 +76,7 @@ function App() {
     },
     editor: {
       width: "100%",
+      height:"80%",
     }
   };
 
