@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "rebuild": "electron-rebuild -f -w node-pty"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
@@ -27,7 +28,6 @@
     "babel-loader": "^9.1.3",
     "css-loader": "^6.0.0",
     "electron": "29.1.4",
-    "node-loader": "^2.0.0",
     "style-loader": "^3.0.0"
   },
   "keywords": [],
@@ -38,7 +38,9 @@
   "license": "MIT",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
+    "node-pty": "^1.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "xterm-react": "^1.0.0"
   }
 }
