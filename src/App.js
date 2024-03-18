@@ -33,6 +33,7 @@ function App() {
      ipcRenderer.removeAllListeners('pty-data');
     };
   });
+
   useEffect(() => {
     if (file) {
       var reader = new FileReader();
@@ -48,8 +49,6 @@ function App() {
       setLanguage(newLanguage);
     }
   }, [file]);
-
-
 
   loader.config({ monaco });
 
@@ -119,11 +118,21 @@ function App() {
       setFile(event.target.files[0]);
     }
   };
+
+  const saveFile = () => {
+    console.log(file.path);
+    console.log(code);
+    ipcRenderer.send("save-file", file.path, code); 
+    console.log(Editor.onDidChangeModelContent);
+  }
   return (
     <div style={styles.container}>
-      <input type="file" onChange={handleFileChange} /> 
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={saveFile}>
+      Save Changes
+    </button>
       <div style={styles.editor}>
-        <Editor height="90vh" defaultLanguage="javascript" language={language} value={code} theme="vs-dark" options={{
+        <Editor height="90vh" defaultLanguage="javascript" language={language} value={code} theme="vs-dark" onChange={(newCode) => { setCode(newCode); }}options={{
             minimap: {
               enabled: false,
             },

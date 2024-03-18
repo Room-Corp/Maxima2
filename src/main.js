@@ -3,6 +3,7 @@ const path = require("path");
 //var Terminal = require('xterm').Terminal;
 const pty = require("node-pty");
 const os = require("os");
+const fs = require('fs');
 
 // Initialize node-pty with an appropriate shell
 let mainWindow;
@@ -68,6 +69,14 @@ ptyProcess.onData((data) => {
 ipcMain.on("user-input", (event, input) => {
   ptyProcess.write(input);
 });
+
+ipcMain.on("save-file", (event, fileToSave, code) => {
+  console.log(fileToSave);
+  console.log(code);
+  fs.writeFileSync(fileToSave, code);
+
+});
+
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
