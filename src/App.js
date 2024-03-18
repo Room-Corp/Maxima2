@@ -79,6 +79,9 @@ function App() {
         ipcRenderer.send("user-input", input + "\r"); // Send input to pty
         console.log("input is " + input);
         setInput(""); // Clear the input
+      } else if(code == 127) {
+        setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
+        TerminalDisplay.write("\x1b[D\x1b[P")
       } else {
         // Add general key press characters to the terminal
        TerminalDisplay.write(data);
