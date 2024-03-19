@@ -18,15 +18,27 @@ function App() {
   const [file, setFile] = useState(); 
   const [language, setLanguage] = useState('javascript');
 
-
+  // ipcRenderer.on('pty-data', (event, data) => {
+  //   if (data && TerminalDisplay) {
+  //     console.log("data: " + data);
+  //          TerminalDisplay.write(data);
+  //     } else {
+  //       console.log("bozo");
+        
+  //     }
+  //   // do stuffs
+  // });
 
   useEffect(() => {
     console.log("ran");
     ipcRenderer.on('pty-data', (event, data) => {
-      if (data && TerminalDisplay && data != lastLine) {
+      if (data && TerminalDisplay) {
         console.log("data: " + data);
              TerminalDisplay.write(data);
-          }
+        } else {
+          console.log("bozo");
+          
+        }
       // do stuffs
     });
     return () => {
@@ -139,7 +151,6 @@ function App() {
       }}/>
         </div>
       <div style={styles.terminal}>
-    
         <Xterm
           onInit={onTermInit}
           onDispose={onTermDispose}

@@ -5,6 +5,7 @@ const pty = require("node-pty");
 const os = require("os");
 const fs = require('fs');
 
+
 // Initialize node-pty with an appropriate shell
 let mainWindow;
 
