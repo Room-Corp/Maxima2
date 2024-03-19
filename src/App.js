@@ -100,6 +100,7 @@ function App() {
       // Add other necessary properties here
     };
     ipcRenderer.send("asynchronous-message", terminalInfo);
+    ipcRenderer.send("prepare-input", terminalInfo);
     //ipcRenderer.send("user-input", "export PS1=\"\\\\u@\h \\\\W]\\\\$\"" + "\r");
   };
   const onTermDispose = (term) => {

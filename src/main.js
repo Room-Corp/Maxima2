@@ -48,12 +48,12 @@ app.on("ready", createWindow);
 let count = 0;
 let row = 0;
 let col = 0;
+let ptyProcess;
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
   col = terminalInfo.cols;
-});
-const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
-const ptyProcess = pty.spawn(shell, [], {
+  const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
+ ptyProcess = pty.spawn(shell, [], {
   name: "xterm-color",
   cols: col,
   rows: row,
@@ -61,15 +61,23 @@ const ptyProcess = pty.spawn(shell, [], {
   env: process.env,
 });
 
+});
+ipcMain.on("prepare-input", (event, terminalInfo) => {
 
-ptyProcess.onData((data) => {
-  mainWindow.webContents.send("pty-data", data);
-  console.log("data is " + data)
+  ptyProcess.onData((data) => {
+    mainWindow.webContents.send("pty-data", data);
+    console.log("data is " + data)
+  });
+  
+
 });
 
 ipcMain.on("user-input", (event, input) => {
   ptyProcess.write(input);
 });
+
+
+
 
 ipcMain.on("save-file", (event, fileToSave, code) => {
   console.log(fileToSave);
