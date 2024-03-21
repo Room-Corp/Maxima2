@@ -3,10 +3,36 @@ import { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");
 import { Xterm } from "xterm-react";
 import "xterm/css/xterm.css";
+import { FitAddon } from 'xterm-addon-fit';
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
+import { Panel, PanelGroup, PanelResizeHandle, getPanelElement, } from "react-resizable-panels";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
+
+
+function useWindowDimensions() {
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
+  useEffect(() => {
+    function handleResize2() {
+      setWindowDimensions(getWindowDimensions());
+    }
+
+    window.addEventListener("resize", handleResize2);
+    return () => window.removeEventListener("resize", handleResize2);
+  }, []);
+
+  return windowDimensions;
+}
+
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height,
+  };
+}
 
 function App() {
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
@@ -17,6 +43,14 @@ function App() {
   const [filePath, setFilePath] = useState("");
   const [language, setLanguage] = useState("javascript");
   const [files, setFiles] = useState([]);
+  const fitAddon = new FitAddon();
+  const [terminal, setTerminal] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const termPanelElement = getPanelElement("term-panel");
+
+ // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+
 
   const folderInput = useRef(null);
 
@@ -32,6 +66,7 @@ function App() {
         TerminalDisplay.write(data);
       } else {
         console.log("bozo");
+        
       }
       // do stuffs
     });
@@ -46,34 +81,55 @@ function App() {
     container: {
       backgroundColor: "black",
       color: "white",
-      height: "100vh",
+      height: "100%",
       display: "flex",
       alignItems: "center",
       flexDirection: "column",
       padding: 0,
       margin: 0,
     },
+    terminalContainer: {
+      // Set maximum height to fit within viewport
+      //overflow: "hidden", // Hide overflow content
+      //display: "block",
+	//position: "absolute",  /* Matches padding-bottom on .terminal-outer-container */
+
+    // height:"100%",
+     //borderTop: "10px solid #f0f0f0",
+
+      
+    },
     terminal: {
-      position: "fixed",
       bottom: 0,
+      margin: 0,
+      padding: 0,
       left: 0,
+      marginBottom: 25,
       width: "100%",
-      backgroundColor: "#f0f0f",
-      //padding: "10px" ,
+      height:"100%", 
+      backgroundColor: "#f0f0f", 
+      overflowY:"auto",
+      //float:"bo
+      // position:"absolute",
       borderTop: "10px solid #f0f0f0",
+      //padding: "10px" ,
+     // position: "fixed"
+      
+      //overflow:"auto",
+      
     },
     editor: {
-      width: "90%",
-      height: "80%",
-      position: "relative",
-      marginLeft: "10%",
+      width: "100%",
+  
+      //position: "relative",
+      //marginLeft: "10%",
     },
     sideBar: {
-      width: "10%",
-      height: "80%",
-      position: "fixed",
       top: 0,
-      left: 0,
+      padding: 0,
+      margin: 0,
+      width: "100%",
+      height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
   };
@@ -81,6 +137,11 @@ function App() {
   const onTermInit = (term) => {
     setTerminalDisplay(term);
     term.reset();
+   // term.loadAddon();
+   
+    //term.open(document.getElementById('terminal'));
+    //fitAddon.fit();
+
     const terminalInfo = {
       rows: term.rows,
       cols: term.cols,
@@ -88,6 +149,11 @@ function App() {
     };
     ipcRenderer.send("asynchronous-message", terminalInfo);
     ipcRenderer.send("prepare-input", terminalInfo);
+    handleResize(40);
+   
+    //term.loadAddon(fitAddon);
+    //TerminalDisplay.emit('scroll', term.ydisp);
+    //fitAddon.fit();
     //ipcRenderer.send("user-input", "export PS1=\"\\\\u@\h \\\\W]\\\\$\"" + "\r");
   };
   const onTermDispose = (term) => {
@@ -103,8 +169,10 @@ function App() {
         console.log("input is " + input);
         setInput(""); // Clear the input
       } else if (code == 127) {
+        console.log(input.length)
         setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
         TerminalDisplay.write("\x1b[D\x1b[P");
+        //TerminalDisplay.resize(100,);
       } else {
         TerminalDisplay.write(data);
         //console.log("data is" + data);
@@ -196,6 +264,22 @@ function App() {
     );
   }
 
+  function handleResize(size) {
+
+    if(TerminalDisplay) {
+    console.log(size);
+   // TerminalDisplay.open(document.getElementById('terminalC'));
+   // fitAddon.fit();
+   // console.log(TerminalDisplay.getFont());
+  let cols = Math.floor(width / 14);
+	let rows = Math.floor( height * (size/100) / 21);
+  TerminalDisplay.resize(cols, rows);
+  // let font = TerminalDisplay?.getFont().charHeight;
+  }
+
+
+  }
+
   return (
     <div style={styles.container}>
       <input
@@ -206,7 +290,18 @@ function App() {
         onChange={folderOnChange}
       />
       <button onClick={saveFile}>Save Changes</button>
-      <div style={styles.editor}>
+      <PanelGroup direction="vertical">
+        <Panel defaultSize={80}> 
+      <PanelGroup direction="horizontal">
+                  
+      <Panel minSize={5} defaultSize={10}> 
+      <div style={styles.sideBar}> 
+          <MyList items={files} />
+          </div>
+        </Panel >
+        <PanelResizeHandle/>
+        <Panel minSize={25}defaultSize={75}> 
+        <div style={styles.editor}>
         <Editor
           height="90vh"
           defaultLanguage="javascript"
@@ -222,19 +317,39 @@ function App() {
             },
           }}
         />
-        <div style={styles.sideBar}>
-          <MyList items={files} />
         </div>
-      </div>
-      <div style={styles.terminal}>
+        </Panel>
+        </PanelGroup>
+        </Panel>
+        <PanelResizeHandle/>
+        <Panel id="term-panel" minSize={10} defaultSize={40} onResize= {(size) => handleResize(size)}> 
+        <div style={styles.terminal} >
         <Xterm
+        ref={(ref) => {
+          setTerminal(ref ? ref.getTerminal() : null);
+        }}
           onInit={onTermInit}
           onDispose={onTermDispose}
           onData={handleData}
+          fontSize={14}
+         // scrollBack={}
+          //ssr={false}
         />
       </div>
+  
+      </Panel> 
+      
+      </PanelGroup>
+      
     </div>
   );
 }
 
 export default App;
+{/* <div style={styles.terminal}>
+        <Xterm
+          onInit={onTermInit}
+          onDispose={onTermDispose}
+          onData={handleData}
+        />
+      </div> */}
