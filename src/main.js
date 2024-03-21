@@ -86,6 +86,27 @@ ipcMain.on("save-file", (event, fileToSave, code) => {
 
 });
 
+ipcMain.on("get-directory", async (event, path) => {
+  try {
+    const files = await readdirS(path);
+    event.reply("directory-contents", files);
+  } catch (error) {
+    event.reply("directory-error", error.message);
+  }
+});
+
+async function readdirS(path) {
+  return await fs.promises.readdir(path, { encoding: 'utf-8', withFileTypes: true });
+}
+
+function isDirectory(path) {
+  return fs.lstatSync(path).isDirectory();
+}
+ipcMain.on("get-code", (event, filePath) => {
+  var buffer = fs.readFileSync(filePath);
+  //console.log(buffer.toString())
+  event.reply("extracted-code",buffer.toString());
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
