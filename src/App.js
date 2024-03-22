@@ -85,8 +85,9 @@ function App() {
       display: "flex",
       alignItems: "center",
       flexDirection: "column",
-      padding: 0,
+     // padding: 0,
       margin: 0,
+      paddingBottom: "0px"
     },
     terminalContainer: {
       // Set maximum height to fit within viewport
@@ -240,6 +241,9 @@ function App() {
         if (["css", "html", "python", "dart", "json"].includes(extension)) {
           newLanguage = extension;
         }
+        if("lock".includes(extension)) {
+          newLanguage = "yaml";
+        }
 
         setLanguage(newLanguage);
         console.log(language);
@@ -282,6 +286,8 @@ function App() {
 
   return (
     <div style={styles.container}>
+
+      <PanelGroup direction="vertical">
       <input
         type="file"
         className="hidden"
@@ -290,7 +296,6 @@ function App() {
         onChange={folderOnChange}
       />
       <button onClick={saveFile}>Save Changes</button>
-      <PanelGroup direction="vertical">
         <Panel defaultSize={80}> 
       <PanelGroup direction="horizontal">
                   
