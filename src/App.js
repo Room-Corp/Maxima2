@@ -276,7 +276,7 @@ function App() {
    // fitAddon.fit();
    // console.log(TerminalDisplay.getFont());
   let cols = Math.floor(width / 14);
-	let rows = Math.floor( height * (size/100) / 21);
+	let rows = Math.floor( height * (size/100) / 24);
   TerminalDisplay.resize(cols, rows);
   // let font = TerminalDisplay?.getFont().charHeight;
   }
@@ -286,8 +286,6 @@ function App() {
 
   return (
     <div style={styles.container}>
-
-      <PanelGroup direction="vertical">
       <input
         type="file"
         className="hidden"
@@ -296,6 +294,8 @@ function App() {
         onChange={folderOnChange}
       />
       <button onClick={saveFile}>Save Changes</button>
+      <PanelGroup direction="vertical">
+
         <Panel defaultSize={80}> 
       <PanelGroup direction="horizontal">
                   
