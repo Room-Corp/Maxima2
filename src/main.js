@@ -3,8 +3,7 @@ const path = require("path");
 //var Terminal = require('xterm').Terminal;
 const pty = require("node-pty");
 const os = require("os");
-const fs = require('fs');
-
+const fs = require("fs");
 
 // Initialize node-pty with an appropriate shell
 let mainWindow;
@@ -54,37 +53,29 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
   col = terminalInfo.cols;
   const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
- ptyProcess = pty.spawn(shell, [], {
-  name: "xterm-color",
-  cols: col,
-  rows: row,
-  cwd: process.env.HOME,
-  env: process.env,
-});
-
+  ptyProcess = pty.spawn(shell, [], {
+    name: "xterm-color",
+    cols: col,
+    rows: row,
+    cwd: process.env.HOME,
+    env: process.env,
+  });
 });
 ipcMain.on("prepare-input", (event, terminalInfo) => {
-
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
-    console.log("data is " + data)
+    console.log("data is " + data);
   });
-  
-
 });
 
 ipcMain.on("user-input", (event, input) => {
   ptyProcess.write(input);
 });
 
-
-
-
 ipcMain.on("save-file", (event, fileToSave, code) => {
   console.log(fileToSave);
   console.log(code);
   fs.writeFileSync(fileToSave, code);
-
 });
 
 ipcMain.on("get-directory", async (event, path) => {
@@ -97,16 +88,33 @@ ipcMain.on("get-directory", async (event, path) => {
 });
 
 async function readdirS(path) {
-  return await fs.promises.readdir(path, { encoding: 'utf-8', withFileTypes: true });
+  console.log("reading");
+  return await fs.promises.readdir(path, {
+    encoding: "utf-8",
+    withFileTypes: true,
+  });
 }
 
 function isDirectory(path) {
   return fs.lstatSync(path).isDirectory();
 }
-ipcMain.on("get-code", (event, filePath) => {
-  var buffer = fs.readFileSync(filePath);
-  //console.log(buffer.toString())
-  event.reply("extracted-code",buffer.toString());
+ipcMain.on("get-code", async (event, filePath) => {
+  console.log("bozo");
+  if (isDirectory(filePath)) {
+    console.log("directory");
+    try {
+      const files = await readdirS(filePath);
+      console.log(files)
+      event.reply("directory-contentsInside", files);
+    } catch (error) {
+      console.log("error here")
+      event.reply("directory-error", + error.message);
+    }
+  } else {
+    var buffer = fs.readFileSync(filePath);
+
+    event.reply("extracted-code", buffer.toString());
+  }
 });
 
 app.on("window-all-closed", () => {

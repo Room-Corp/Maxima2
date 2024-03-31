@@ -3,16 +3,22 @@ import { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");
 import { Xterm } from "xterm-react";
 import "xterm/css/xterm.css";
-import { FitAddon } from 'xterm-addon-fit';
+import { FitAddon } from "xterm-addon-fit";
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Panel, PanelGroup, PanelResizeHandle, getPanelElement, } from "react-resizable-panels";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  getPanelElement,
+} from "react-resizable-panels";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
-
 function useWindowDimensions() {
-  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+  const [windowDimensions, setWindowDimensions] = useState(
+    getWindowDimensions(),
+  );
 
   useEffect(() => {
     function handleResize2() {
@@ -49,8 +55,7 @@ function App() {
   const { width, height } = useWindowDimensions();
   const termPanelElement = getPanelElement("term-panel");
 
- // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
-
+  // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);
 
@@ -66,7 +71,6 @@ function App() {
         TerminalDisplay.write(data);
       } else {
         console.log("bozo");
-        
       }
       // do stuffs
     });
@@ -85,20 +89,17 @@ function App() {
       display: "flex",
       alignItems: "center",
       flexDirection: "column",
-     // padding: 0,
+      // padding: 0,
       margin: 0,
-      paddingBottom: "0px"
+      paddingBottom: "0px",
     },
     terminalContainer: {
       // Set maximum height to fit within viewport
       //overflow: "hidden", // Hide overflow content
       //display: "block",
-	//position: "absolute",  /* Matches padding-bottom on .terminal-outer-container */
-
-    // height:"100%",
-     //borderTop: "10px solid #f0f0f0",
-
-      
+      //position: "absolute",  /* Matches padding-bottom on .terminal-outer-container */
+      // height:"100%",
+      //borderTop: "10px solid #f0f0f0",
     },
     terminal: {
       bottom: 0,
@@ -107,21 +108,20 @@ function App() {
       left: 0,
       marginBottom: 25,
       width: "100%",
-      height:"100%", 
-      backgroundColor: "#f0f0f", 
-      overflowY:"auto",
+      height: "100%",
+      backgroundColor: "#f0f0f",
+      overflowY: "auto",
       //float:"bo
       // position:"absolute",
       borderTop: "10px solid #f0f0f0",
       //padding: "10px" ,
-     // position: "fixed"
-      
+      // position: "fixed"
+
       //overflow:"auto",
-      
     },
     editor: {
       width: "100%",
-  
+
       //position: "relative",
       //marginLeft: "10%",
     },
@@ -138,8 +138,8 @@ function App() {
   const onTermInit = (term) => {
     setTerminalDisplay(term);
     term.reset();
-   // term.loadAddon();
-   
+    // term.loadAddon();
+
     //term.open(document.getElementById('terminal'));
     //fitAddon.fit();
 
@@ -151,7 +151,7 @@ function App() {
     ipcRenderer.send("asynchronous-message", terminalInfo);
     ipcRenderer.send("prepare-input", terminalInfo);
     handleResize(40);
-   
+
     //term.loadAddon(fitAddon);
     //TerminalDisplay.emit('scroll', term.ydisp);
     //fitAddon.fit();
@@ -170,7 +170,7 @@ function App() {
         console.log("input is " + input);
         setInput(""); // Clear the input
       } else if (code == 127) {
-        console.log(input.length)
+        console.log(input.length);
         setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
         TerminalDisplay.write("\x1b[D\x1b[P");
         //TerminalDisplay.resize(100,);
@@ -203,6 +203,7 @@ function App() {
       // Handle received files
       setFiles(files);
       console.log("Files in directory:", files);
+      
       // Update your front end with the file names
     });
 
@@ -221,6 +222,11 @@ function App() {
     ipcRenderer.send("save-file", filePath, code);
   };
 
+
+  // maybe I make a list with maps --> then list of inside files?
+  const openFolder = () => {
+
+  }
   // function Item(props) {
   //   return <li>{props.value}</li>;
   // }
@@ -230,10 +236,18 @@ function App() {
       return <div>No items to display</div>;
     }
     function setEditor(fileName) {
+      // add function to check if directory here !
+      //
       let finalName = fileName.path + "/" + fileName.name;
       console.log(finalName);
       ipcRenderer.send("get-code", finalName);
+      ipcRenderer.on("directory-contentsInside", (event, files) => {
+        // Handle received files
+        console.log("Files in directory:", files);
+        // Update your front end with the file names
+      });
       ipcRenderer.on("extracted-code", (event, newCode) => {
+        console.log("called");
         setCode(newCode);
         //console.log(newCode);
         let newLanguage = "javascript";
@@ -241,12 +255,12 @@ function App() {
         if (["css", "html", "python", "dart", "json"].includes(extension)) {
           newLanguage = extension;
         }
-        if("lock".includes(extension)) {
+        if ("lock".includes(extension)) {
           newLanguage = "yaml";
         }
 
         setLanguage(newLanguage);
-        console.log(language);
+        //console.log(language);
         setFilePath(finalName);
       });
 
@@ -258,9 +272,13 @@ function App() {
       <div>
         <h2>List:</h2>
         {items.map((item, index) => (
-          <div key={index} onClick={() => setEditor(item)}>
-            <li>
-              <p>Name: {item.name}</p>
+          <div
+            key={index}
+            style={{ border: "3px solid rgb(212, 212, 212)", padding: "2px" }}
+            onClick={() => setEditor(item)}
+          >
+            <li style={{ listStyleType: "none" }}>
+              <p>{item.name.replace("Name: ", "")}</p>
             </li>
           </div>
         ))}
@@ -269,19 +287,16 @@ function App() {
   }
 
   function handleResize(size) {
-
-    if(TerminalDisplay) {
-    console.log(size);
-   // TerminalDisplay.open(document.getElementById('terminalC'));
-   // fitAddon.fit();
-   // console.log(TerminalDisplay.getFont());
-  let cols = Math.floor(width / 14);
-	let rows = Math.floor( height * (size/100) / 24);
-  TerminalDisplay.resize(cols, rows);
-  // let font = TerminalDisplay?.getFont().charHeight;
-  }
-
-
+    if (TerminalDisplay) {
+      console.log(size);
+      // TerminalDisplay.open(document.getElementById('terminalC'));
+      // fitAddon.fit();
+      // console.log(TerminalDisplay.getFont());
+      let cols = Math.floor(width / 14);
+      let rows = Math.floor((height * (size / 100)) / 24);
+      TerminalDisplay.resize(cols, rows);
+      // let font = TerminalDisplay?.getFont().charHeight;
+    }
   }
 
   return (
@@ -295,66 +310,68 @@ function App() {
       />
       <button onClick={saveFile}>Save Changes</button>
       <PanelGroup direction="vertical">
-
-        <Panel defaultSize={80}> 
-      <PanelGroup direction="horizontal">
-                  
-      <Panel minSize={5} defaultSize={10}> 
-      <div style={styles.sideBar}> 
-          <MyList items={files} />
+        <Panel defaultSize={80}>
+          <PanelGroup direction="horizontal">
+            <Panel minSize={5} defaultSize={10}>
+              <div style={styles.sideBar}>
+                <MyList items={files} />
+              </div>
+            </Panel>
+            <PanelResizeHandle />
+            <Panel minSize={25} defaultSize={75}>
+              <div style={styles.editor}>
+                <Editor
+                  height="90vh"
+                  defaultLanguage="javascript"
+                  language={language}
+                  value={code}
+                  theme="vs-dark"
+                  onChange={(newCode) => {
+                    setCode(newCode);
+                  }}
+                  options={{
+                    minimap: {
+                      enabled: false,
+                    },
+                  }}
+                />
+              </div>
+            </Panel>
+          </PanelGroup>
+        </Panel>
+        <PanelResizeHandle />
+        <Panel
+          id="term-panel"
+          minSize={10}
+          defaultSize={40}
+          onResize={(size) => handleResize(size)}
+        >
+          <div style={styles.terminal}>
+            <Xterm
+              ref={(ref) => {
+                setTerminal(ref ? ref.getTerminal() : null);
+              }}
+              onInit={onTermInit}
+              onDispose={onTermDispose}
+              onData={handleData}
+              fontSize={14}
+              // scrollBack={}
+              //ssr={false}
+            />
           </div>
-        </Panel >
-        <PanelResizeHandle/>
-        <Panel minSize={25}defaultSize={75}> 
-        <div style={styles.editor}>
-        <Editor
-          height="90vh"
-          defaultLanguage="javascript"
-          language={language}
-          value={code}
-          theme="vs-dark"
-          onChange={(newCode) => {
-            setCode(newCode);
-          }}
-          options={{
-            minimap: {
-              enabled: false,
-            },
-          }}
-        />
-        </div>
         </Panel>
-        </PanelGroup>
-        </Panel>
-        <PanelResizeHandle/>
-        <Panel id="term-panel" minSize={10} defaultSize={40} onResize= {(size) => handleResize(size)}> 
-        <div style={styles.terminal} >
-        <Xterm
-        ref={(ref) => {
-          setTerminal(ref ? ref.getTerminal() : null);
-        }}
-          onInit={onTermInit}
-          onDispose={onTermDispose}
-          onData={handleData}
-          fontSize={14}
-         // scrollBack={}
-          //ssr={false}
-        />
-      </div>
-  
-      </Panel> 
-      
       </PanelGroup>
-      
     </div>
   );
 }
 
 export default App;
-{/* <div style={styles.terminal}>
+{
+  /* <div style={styles.terminal}>
         <Xterm
           onInit={onTermInit}
           onDispose={onTermDispose}
           onData={handleData}
         />
-      </div> */}
+      </div> */
+}
