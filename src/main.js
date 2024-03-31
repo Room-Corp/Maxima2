@@ -49,6 +49,8 @@ let count = 0;
 let row = 0;
 let col = 0;
 let ptyProcess;
+
+
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
   col = terminalInfo.cols;
@@ -61,6 +63,8 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
     env: process.env,
   });
 });
+
+// invoke hande?
 ipcMain.on("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
@@ -68,9 +72,12 @@ ipcMain.on("prepare-input", (event, terminalInfo) => {
   });
 });
 
+
+// switch to invoke handle
 ipcMain.on("user-input", (event, input) => {
   ptyProcess.write(input);
 });
+
 
 ipcMain.on("save-file", (event, fileToSave, code) => {
   console.log(fileToSave);
@@ -78,6 +85,7 @@ ipcMain.on("save-file", (event, fileToSave, code) => {
   fs.writeFileSync(fileToSave, code);
 });
 
+// switch to invoke handle 
 ipcMain.on("get-directory", async (event, path) => {
   try {
     const files = await readdirS(path);
@@ -98,22 +106,24 @@ async function readdirS(path) {
 function isDirectory(path) {
   return fs.lstatSync(path).isDirectory();
 }
-ipcMain.on("get-code", async (event, filePath) => {
+ipcMain.handle("get-code", async (event, filePath) => {
   console.log("bozo");
   if (isDirectory(filePath)) {
     console.log("directory");
     try {
       const files = await readdirS(filePath);
       console.log(files)
-      event.reply("directory-contentsInside", files);
+      //event.reply("directory-contentsInside", files);
+      return files;
     } catch (error) {
       console.log("error here")
-      event.reply("directory-error", + error.message);
+      //event.reply("directory-error", + error.message);
+      return error.message;
     }
   } else {
     var buffer = fs.readFileSync(filePath);
-
-    event.reply("extracted-code", buffer.toString());
+    return buffer.toString();
+    //event.reply("extracted-code", buffer.toString());
   }
 });
 

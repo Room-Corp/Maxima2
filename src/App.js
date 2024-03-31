@@ -235,37 +235,39 @@ function App() {
     if (!Array.isArray(items)) {
       return <div>No items to display</div>;
     }
-    function setEditor(fileName) {
+    async function setEditor(fileName) {
       // add function to check if directory here !
       //
       let finalName = fileName.path + "/" + fileName.name;
       console.log(finalName);
-      ipcRenderer.send("get-code", finalName);
-      ipcRenderer.on("directory-contentsInside", (event, files) => {
-        // Handle received files
-        console.log("Files in directory:", files);
-        // Update your front end with the file names
-      });
-      ipcRenderer.on("extracted-code", (event, newCode) => {
-        console.log("called");
-        setCode(newCode);
-        //console.log(newCode);
-        let newLanguage = "javascript";
-        const extension = finalName.split(".").pop();
-        if (["css", "html", "python", "dart", "json"].includes(extension)) {
-          newLanguage = extension;
-        }
-        if ("lock".includes(extension)) {
-          newLanguage = "yaml";
+      //ipcRenderer.send("get-code", finalName);
+      // ipcRenderer.on("directory-contentsInside", (event, files) => {
+      //   console.log("Files in directory:", files);
+      // }
+      // );
+      const invokeReturn = await ipcRenderer.invoke('get-code', finalName);
+      console.log(invokeReturn);
+
+        let typist = typeof invokeReturn;
+        if(typist == "string") {
+          setCode(invokeReturn);
+          //console.log(newCode);
+          let newLanguage = "javascript";
+          const extension = finalName.split(".").pop();
+          if (["css", "html", "python", "dart", "json"].includes(extension)) {
+            newLanguage = extension;
+          }
+          if ("lock".includes(extension)) {
+            newLanguage = "yaml";
+          }
+  
+          setLanguage(newLanguage);
+          //console.log(language);
+          setFilePath(finalName);
+        } else {
+          console.log("opening new folder")
         }
 
-        setLanguage(newLanguage);
-        //console.log(language);
-        setFilePath(finalName);
-      });
-
-      // Read file as text
-      //reader.readAsText(fileName);
     }
 
     return (
