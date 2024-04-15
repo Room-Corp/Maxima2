@@ -133,6 +133,14 @@ function App() {
       height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
+    waveFormPanel: {
+      top: 0,
+      padding: 0,
+      margin: 0,
+      width: "100%",
+      height: "80vw",
+      backgroundColor: "#333" /* Change the background color as desired */,
+    },
   };
 
   const onTermInit = (term) => {
@@ -334,6 +342,10 @@ function App() {
                   }}
                 />
               </div>
+            </Panel>
+            <PanelResizeHandle />
+            <Panel minSize={5} defaultSize={10}>
+              <div style={styles.waveFormPanel}></div>
             </Panel>
           </PanelGroup>
         </Panel>
