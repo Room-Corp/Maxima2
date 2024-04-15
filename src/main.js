@@ -64,7 +64,7 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   });
 });
 
-// invoke hande?
+// invoke handle?
 ipcMain.on("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);

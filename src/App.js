@@ -203,7 +203,7 @@ function App() {
       // Handle received files
       setFiles(files);
       console.log("Files in directory:", files);
-      
+
       // Update your front end with the file names
     });
 
@@ -222,11 +222,8 @@ function App() {
     ipcRenderer.send("save-file", filePath, code);
   };
 
-
   // maybe I make a list with maps --> then list of inside files?
-  const openFolder = () => {
-
-  }
+  const openFolder = () => {};
   // function Item(props) {
   //   return <li>{props.value}</li>;
   // }
@@ -245,29 +242,28 @@ function App() {
       //   console.log("Files in directory:", files);
       // }
       // );
-      const invokeReturn = await ipcRenderer.invoke('get-code', finalName);
+      const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
       console.log(invokeReturn);
 
-        let typist = typeof invokeReturn;
-        if(typist == "string") {
-          setCode(invokeReturn);
-          //console.log(newCode);
-          let newLanguage = "javascript";
-          const extension = finalName.split(".").pop();
-          if (["css", "html", "python", "dart", "json"].includes(extension)) {
-            newLanguage = extension;
-          }
-          if ("lock".includes(extension)) {
-            newLanguage = "yaml";
-          }
-  
-          setLanguage(newLanguage);
-          //console.log(language);
-          setFilePath(finalName);
-        } else {
-          console.log("opening new folder")
+      let typist = typeof invokeReturn;
+      if (typist == "string") {
+        setCode(invokeReturn);
+        //console.log(newCode);
+        let newLanguage = "javascript";
+        const extension = finalName.split(".").pop();
+        if (["css", "html", "python", "dart", "json"].includes(extension)) {
+          newLanguage = extension;
+        }
+        if ("lock".includes(extension)) {
+          newLanguage = "yaml";
         }
 
+        setLanguage(newLanguage);
+        //console.log(language);
+        setFilePath(finalName);
+      } else {
+        console.log("opening new folder");
+      }
     }
 
     return (
