@@ -38,6 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "d3-wave": "^1.1.5",
     "electron-squirrel-startup": "^1.0.0",
     "monaco-editor": "^0.47.0",
     "monaco-editor-webpack-plugin": "^7.1.0",

@@ -12,6 +12,9 @@ import {
   PanelResizeHandle,
   getPanelElement,
 } from "react-resizable-panels";
+import { WaveGraph } from "d3-wave";
+import { VcdParser } from "./Parser.js";
+import WaveformGraph from "./WaveformGraph";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
@@ -54,10 +57,37 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const { width, height } = useWindowDimensions();
   const termPanelElement = getPanelElement("term-panel");
+  const [parseData, setParsedData] = useState();
 
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);
+  const openWaveForm = async () => {
+    console.log("file has bene found");
+    // const fileContents = await readFileContents("./test/swerv1.vcd");
+    const invokeReturn = await ipcRenderer.invoke(
+      "get-code",
+      "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
+    );
+    console.log(invokeReturn);
+    console.log("filedone");
+    const parser = new VcdParser();
+    parser.parse_str(invokeReturn);
+    console.log(parser);
+    //setParsedData(JSON.parse(parser));
+    //setParsedData(parser);
+    //var svg = d3.select("#wave-graph"); var waveGraph = new
+    //WaveGraph(svg); waveGraph.setSizes();
+    //waveGraph.bindData(JSON.parse(invokeReturn));
+    //setParsedData(parser);
+
+    //console.log(jsonData);
+    //const jsonString = JSON.stringify(jsonData, null, 2);
+    setParsedData(parser.scope.toJson());
+
+    //console.log("json String is");
+    //console.log(jsonString);
+  };
 
   useEffect(() => {
     console.log(folderInput);
@@ -137,12 +167,23 @@ function App() {
       top: 0,
       padding: 0,
       margin: 0,
+      height: "100%",
       width: "100%",
       height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
   };
-
+  const readFileContents = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target.result);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+    });
+  };
   const onTermInit = (term) => {
     setTerminalDisplay(term);
     term.reset();
@@ -231,7 +272,7 @@ function App() {
   };
 
   // maybe I make a list with maps --> then list of inside files?
-  const openFolder = () => {};
+
   // function Item(props) {
   //   return <li>{props.value}</li>;
   // }
@@ -315,6 +356,7 @@ function App() {
         onChange={folderOnChange}
       />
       <button onClick={saveFile}>Save Changes</button>
+      <button onClick={openWaveForm}>generateWavyness</button>
       <PanelGroup direction="vertical">
         <Panel defaultSize={80}>
           <PanelGroup direction="horizontal">
@@ -345,7 +387,9 @@ function App() {
             </Panel>
             <PanelResizeHandle />
             <Panel minSize={5} defaultSize={10}>
-              <div style={styles.waveFormPanel}></div>
+              <div style={styles.waveFormPanel}>
+                <WaveformGraph parsedData={parseData} />
+              </div>
             </Panel>
           </PanelGroup>
         </Panel>
