@@ -80,9 +80,6 @@ function App() {
     //WaveGraph(svg); waveGraph.setSizes();
     //waveGraph.bindData(JSON.parse(invokeReturn));
     //setParsedData(parser);
-
-    //console.log(jsonData);
-    //const jsonString = JSON.stringify(jsonData, null, 2);
     setParsedData(parser.scope.toJson());
 
     //console.log("json String is");
