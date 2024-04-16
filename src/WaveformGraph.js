@@ -11,6 +11,7 @@ const WaveformGraph = (props) => {
       const svg = d3.select(waveGraphRef.current);
       const waveGraph = new WaveGraph(svg);
       waveGraph.setSizes();
+      waveGraph.setZoom(25);
       waveGraph.bindData(props.parsedData);
     } else {
       console.log("ur cooked bud");

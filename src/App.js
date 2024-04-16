@@ -74,12 +74,6 @@ function App() {
     const parser = new VcdParser();
     parser.parse_str(invokeReturn);
     console.log(parser);
-    //setParsedData(JSON.parse(parser));
-    //setParsedData(parser);
-    //var svg = d3.select("#wave-graph"); var waveGraph = new
-    //WaveGraph(svg); waveGraph.setSizes();
-    //waveGraph.bindData(JSON.parse(invokeReturn));
-    //setParsedData(parser);
     setParsedData(parser.scope.toJson());
 
     //console.log("json String is");
@@ -383,7 +377,7 @@ function App() {
               </div>
             </Panel>
             <PanelResizeHandle />
-            <Panel minSize={5} defaultSize={10}>
+            <Panel minSize={5} defaultSize={25}>
               <div style={styles.waveFormPanel}>
                 <WaveformGraph parsedData={parseData} />
               </div>
