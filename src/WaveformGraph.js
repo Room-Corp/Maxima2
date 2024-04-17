@@ -10,8 +10,10 @@ const WaveformGraph = (props) => {
     if (props.parsedData != null) {
       const svg = d3.select(waveGraphRef.current);
       const waveGraph = new WaveGraph(svg);
-      waveGraph.setSizes();
-      waveGraph.setZoom(25);
+      const width = 800; // Adjust this value as needed
+      const height = 400; // Adjust this value as needed
+
+      waveGraph.setZoom();
       waveGraph.bindData(props.parsedData);
     } else {
       console.log("ur cooked bud");
@@ -21,7 +23,7 @@ const WaveformGraph = (props) => {
     // Any additional setup or event handling for the waveform visualization
   }, [props.parsedData]);
 
-  return <svg ref={waveGraphRef} />;
+  return <svg ref={waveGraphRef} style={{ width: "800px", height: "400px" }} />;
 };
 
 export default WaveformGraph;

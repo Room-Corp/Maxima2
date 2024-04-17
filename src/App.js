@@ -164,17 +164,6 @@ function App() {
       backgroundColor: "#333" /* Change the background color as desired */,
     },
   };
-  const readFileContents = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        resolve(event.target.result);
-      };
-      reader.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
   const onTermInit = (term) => {
     setTerminalDisplay(term);
     term.reset();
