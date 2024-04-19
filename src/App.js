@@ -59,6 +59,9 @@ function App() {
   const termPanelElement = getPanelElement("term-panel");
   const [parseData, setParsedData] = useState();
 
+  const [activeTab, setActiveTab] = useState(0);
+  const tabs = ["Terminal", "Wave Form Viewer"];
+
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);
@@ -133,7 +136,7 @@ function App() {
       overflowY: "auto",
       //float:"bo
       // position:"absolute",
-      borderTop: "10px solid #f0f0f0",
+      borderTop: "2px solid #565656",
       //padding: "10px" ,
       // position: "fixed"
 
@@ -141,9 +144,6 @@ function App() {
     },
     editor: {
       width: "100%",
-
-      //position: "relative",
-      //marginLeft: "10%",
     },
     sideBar: {
       top: 0,
@@ -162,6 +162,9 @@ function App() {
       height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
+    tabIst: {
+      borderTop: "2px solid #565656",
+    },
   };
   const onTermInit = (term) => {
     setTerminalDisplay(term);
@@ -179,11 +182,6 @@ function App() {
     ipcRenderer.send("asynchronous-message", terminalInfo);
     ipcRenderer.invoke("prepare-input", terminalInfo);
     handleResize(40);
-
-    //term.loadAddon(fitAddon);
-    //TerminalDisplay.emit('scroll', term.ydisp);
-    //fitAddon.fit();
-    //ipcRenderer.send("user-input", "export PS1=\"\\\\u@\h \\\\W]\\\\$\"" + "\r");
   };
   const onTermDispose = (term) => {
     setTerminalDisplay(null);
@@ -222,11 +220,8 @@ function App() {
       folder = folderPath.substring(0, dotIdx);
     }
     console.log(folder);
-    //use ipc renderer here
-    //const filesAndFolders = await ipcRenderer.send("get-directory", folder);
     const filesAndFolders = await ipcRenderer.invoke("get-directory", folder);
     setFiles(filesAndFolders);
-    // console.log(files[0].name);
   };
 
   const saveFile = () => {
@@ -310,6 +305,13 @@ function App() {
     }
   }
 
+  const handleTabClick = (index) => {
+    if (index == 1) {
+      openWaveForm();
+    }
+    setActiveTab(index);
+  };
+
   return (
     <div style={styles.container}>
       <input
@@ -320,7 +322,6 @@ function App() {
         onChange={folderOnChange}
       />
       <button onClick={saveFile}>Save Changes</button>
-      <button onClick={openWaveForm}>generateWavyness</button>
       <PanelGroup direction="vertical">
         <Panel defaultSize={80}>
           <PanelGroup direction="horizontal">
@@ -350,32 +351,57 @@ function App() {
               </div>
             </Panel>
             <PanelResizeHandle />
-            <Panel minSize={5} defaultSize={25}>
-              <div style={styles.waveFormPanel}>
-                <WaveformGraph parsedData={parseData} />
-              </div>
-            </Panel>
           </PanelGroup>
         </Panel>
-        <PanelResizeHandle />
+        <PanelResizeHandle style={{ borderTop: "2px solid #565656" }} />
         <Panel
           id="term-panel"
           minSize={10}
           defaultSize={40}
           onResize={(size) => handleResize(size)}
         >
-          <div style={styles.terminal}>
-            <Xterm
-              ref={(ref) => {
-                setTerminal(ref ? ref.getTerminal() : null);
-              }}
-              onInit={onTermInit}
-              onDispose={onTermDispose}
-              onData={handleData}
-              fontSize={14}
-              // scrollBack={}
-              //ssr={false}
-            />
+          <div className={styles.tabManager}>
+            <div className={styles.tabSwitcher}>
+              {tabs.map((tab, index) => (
+                <button
+                  style={{
+                    backgroundColor: activeTab === index ? "#565656" : "black", // Change colors as desired
+                    color: "white",
+                    border: "none",
+                    borderRight: "2px solid #565656",
+                    paddingRight: "2%",
+                    paddingLeft: "2%",
+                  }}
+                  key={index}
+                  className={activeTab === index ? "active" : ""}
+                  onClick={() => handleTabClick(index)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className={styles.tabContent}>
+              {activeTab === 0 && (
+                <div style={styles.terminal}>
+                  <Xterm
+                    ref={(ref) => {
+                      setTerminal(ref ? ref.getTerminal() : null);
+                    }}
+                    onInit={onTermInit}
+                    onDispose={onTermDispose}
+                    onData={handleData}
+                    fontSize={14}
+                    // scrollBack={}
+                    //ssr={false}
+                  />
+                </div>
+              )}
+              {activeTab === 1 && (
+                <div style={styles.waveFormPanel}>
+                  <WaveformGraph parsedData={parseData} />
+                </div>
+              )}
+            </div>
           </div>
         </Panel>
       </PanelGroup>
