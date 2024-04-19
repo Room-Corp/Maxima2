@@ -93,7 +93,6 @@ function App() {
       } else {
         console.log("bozo");
       }
-      // do stuffs
     });
     return () => {
       ipcRenderer.removeAllListeners("pty-data");
@@ -178,7 +177,7 @@ function App() {
       // Add other necessary properties here
     };
     ipcRenderer.send("asynchronous-message", terminalInfo);
-    ipcRenderer.send("prepare-input", terminalInfo);
+    ipcRenderer.invoke("prepare-input", terminalInfo);
     handleResize(40);
 
     //term.loadAddon(fitAddon);
@@ -195,7 +194,7 @@ function App() {
       const code = data.charCodeAt(0);
       // If the user hits enter, submit the input
       if (code === 13) {
-        ipcRenderer.send("user-input", input + "\r"); // Send input to pty
+        ipcRenderer.invoke("user-input", input + "\r"); // Send input to pty
         console.log("input is " + input);
         setInput(""); // Clear the input
       } else if (code == 127) {
@@ -225,30 +224,15 @@ function App() {
     console.log(folder);
     //use ipc renderer here
     //const filesAndFolders = await ipcRenderer.send("get-directory", folder);
-    ipcRenderer.send("get-directory", folder);
-
-    // Listen for response from main process
-    ipcRenderer.on("directory-contents", (event, files) => {
-      // Handle received files
-      setFiles(files);
-      console.log("Files in directory:", files);
-
-      // Update your front end with the file names
-    });
-
-    // Listen for errors from main process
-    ipcRenderer.on("directory-error", (event, errorMessage) => {
-      // Handle errors
-      console.error("Error fetching directory:", errorMessage);
-    });
-    //setFiles(filesAndFolders);
-    console.log(files[0].name);
+    const filesAndFolders = await ipcRenderer.invoke("get-directory", folder);
+    setFiles(filesAndFolders);
+    // console.log(files[0].name);
   };
 
   const saveFile = () => {
     console.log(filePath);
     console.log(code);
-    ipcRenderer.send("save-file", filePath, code);
+    ipcRenderer.invoke("save-file", filePath, code);
   };
 
   // maybe I make a list with maps --> then list of inside files?
@@ -400,12 +384,3 @@ function App() {
 }
 
 export default App;
-{
-  /* <div style={styles.terminal}>
-        <Xterm
-          onInit={onTermInit}
-          onDispose={onTermDispose}
-          onData={handleData}
-        />
-      </div> */
-}

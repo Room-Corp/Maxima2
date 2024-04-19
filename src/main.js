@@ -50,7 +50,6 @@ let row = 0;
 let col = 0;
 let ptyProcess;
 
-
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
   col = terminalInfo.cols;
@@ -64,34 +63,33 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   });
 });
 
-// invoke handle?
-ipcMain.on("prepare-input", (event, terminalInfo) => {
+// invoke handle? -- definitley
+ipcMain.handle("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
     console.log("data is " + data);
   });
 });
 
-
 // switch to invoke handle
-ipcMain.on("user-input", (event, input) => {
+ipcMain.handle("user-input", (event, input) => {
   ptyProcess.write(input);
 });
 
-
-ipcMain.on("save-file", (event, fileToSave, code) => {
+// invoke handle
+ipcMain.handle("save-file", (event, fileToSave, code) => {
   console.log(fileToSave);
   console.log(code);
   fs.writeFileSync(fileToSave, code);
 });
 
-// switch to invoke handle 
-ipcMain.on("get-directory", async (event, path) => {
+// switch to invoke handle
+ipcMain.handle("get-directory", async (event, path) => {
   try {
     const files = await readdirS(path);
-    event.reply("directory-contents", files);
+    return files;
   } catch (error) {
-    event.reply("directory-error", error.message);
+    return error.message;
   }
 });
 
@@ -106,17 +104,18 @@ async function readdirS(path) {
 function isDirectory(path) {
   return fs.lstatSync(path).isDirectory();
 }
+
 ipcMain.handle("get-code", async (event, filePath) => {
   console.log("bozo");
   if (isDirectory(filePath)) {
     console.log("directory");
     try {
       const files = await readdirS(filePath);
-      console.log(files)
+      console.log(files);
       //event.reply("directory-contentsInside", files);
       return files;
     } catch (error) {
-      console.log("error here")
+      console.log("error here");
       //event.reply("directory-error", + error.message);
       return error.message;
     }
