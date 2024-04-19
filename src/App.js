@@ -68,6 +68,8 @@ function App() {
   const openWaveForm = async () => {
     console.log("file has bene found");
     // const fileContents = await readFileContents("./test/swerv1.vcd");
+
+    // switch this to work with relative paths
     const invokeReturn = await ipcRenderer.invoke(
       "get-code",
       "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
@@ -78,7 +80,6 @@ function App() {
     parser.parse_str(invokeReturn);
     console.log(parser);
     setParsedData(parser.scope.toJson());
-
     //console.log("json String is");
     //console.log(jsonString);
   };
