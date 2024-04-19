@@ -61,13 +61,14 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
     cwd: process.env.HOME,
     env: process.env,
   });
+  console.log("creating new instance");
 });
 
 // invoke handle? -- definitley
 ipcMain.handle("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
-    console.log("data is " + data);
+    // console.log("data is " + data);
   });
 });
 

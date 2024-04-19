@@ -132,11 +132,11 @@ function App() {
       marginBottom: 25,
       width: "100%",
       height: "100%",
-      backgroundColor: "#f0f0f",
+      //  backgroundColor: "#f0f0f",
       overflowY: "auto",
       //float:"bo
       // position:"absolute",
-      borderTop: "2px solid #565656",
+      //  borderTop: "2px solid #565656",
       //padding: "10px" ,
       // position: "fixed"
 
@@ -153,6 +153,7 @@ function App() {
       height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
+
     waveFormPanel: {
       top: 0,
       padding: 0,
@@ -162,8 +163,14 @@ function App() {
       height: "80vw",
       backgroundColor: "#333" /* Change the background color as desired */,
     },
+
     tabIst: {
       borderTop: "2px solid #565656",
+      backgroundColor: "#565656",
+    },
+
+    tabManager: {
+      backgroundColor: "#565656",
     },
   };
   const onTermInit = (term) => {
@@ -361,7 +368,7 @@ function App() {
           onResize={(size) => handleResize(size)}
         >
           <div className={styles.tabManager}>
-            <div className={styles.tabSwitcher}>
+            <div className={{ backgroundColor: "#565656" }}>
               {tabs.map((tab, index) => (
                 <button
                   style={{
@@ -371,6 +378,8 @@ function App() {
                     borderRight: "2px solid #565656",
                     paddingRight: "2%",
                     paddingLeft: "2%",
+                    paddingTop: "5px",
+                    paddingBottom: "5px",
                   }}
                   key={index}
                   className={activeTab === index ? "active" : ""}
