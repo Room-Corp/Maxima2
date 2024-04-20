@@ -273,6 +273,9 @@ function App() {
         if ("lock".includes(extension)) {
           newLanguage = "yaml";
         }
+        if ("sv".includes(extension)) {
+          newLanguage = "systemverilog";
+        }
 
         setLanguage(newLanguage);
         //console.log(language);
