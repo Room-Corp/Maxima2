@@ -276,6 +276,9 @@ function App() {
         if ("sv".includes(extension)) {
           newLanguage = "systemverilog";
         }
+        if ("v".inclues(extension)) {
+          newLanguage = "verilog";
+        }
 
         setLanguage(newLanguage);
         //console.log(language);
