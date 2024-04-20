@@ -176,7 +176,7 @@ function App() {
     },
 
     tabIst: {
-      borderTop: "2px solid #404040",
+      borderTop: "1px solid #404040",
       backgroundColor: "#565656",
     },
 
@@ -449,8 +449,8 @@ function App() {
                 borderRight: "1px solid #404040",
                 borderLeft: "1px solid #404040",
                 // borderTop: "1px solid #404040",
-                paddingRight: "10%",
-                paddingLeft: "10%",
+                paddingRight: "5%",
+                paddingLeft: "5%",
                 paddingTop: "10px",
                 paddingBottom: "10px",
                 justifyContent: "flex-start",
@@ -496,7 +496,7 @@ function App() {
                 </div>
               )}
             </Panel>
-            <PanelResizeHandle style={{ borderTop: "2px solid #404040" }} />
+            <PanelResizeHandle style={{ borderTop: "1px solid #404040" }} />
             <Panel
               id="term-panel"
               minSize={10}
@@ -504,17 +504,17 @@ function App() {
               onResize={(size) => handleResize(size)}
             >
               <div className={styles.tabManager}>
-                <div className={{ backgroundColor: "#565656" }}>
+                <div className={{ backgroundColor: "#141414" }}>
                   {tabs.map((tab, index) => (
                     <button
                       style={{
                         backgroundColor:
-                          activeTab === index ? "#565656" : "black", // Change colors as desired
+                          activeTab === index ? "#232323" : "#141414", // Change colors as desired
                         color: "white",
                         border: "none",
-                        borderRight: "2px solid #404040",
-                        paddingRight: "2%",
-                        paddingLeft: "2%",
+                        borderRight: "1px solid #404040",
+                        paddingRight: "2.5%",
+                        paddingLeft: "2.5%",
                         paddingTop: "5px",
                         paddingBottom: "5px",
                       }}
