@@ -52,7 +52,7 @@ function App() {
   const [code, setCode] = useState("");
   // const [file, setFile] = useState();
   const [filePath, setFilePath] = useState("");
-  const [language, setLanguage] = useState("javascript");
+  const [language, setLanguage] = useState("verilog");
   const [files, setFiles] = useState([]);
   const fitAddon = new FitAddon();
   const [terminal, setTerminal] = useState(null);
@@ -113,15 +113,16 @@ function App() {
 
   const styles = {
     container: {
-      backgroundColor: "black",
+      backgroundColor: "#141414",
       color: "white",
       height: "100%",
       display: "flex",
-      alignItems: "center",
+      // alignItems: "center",
       flexDirection: "column",
       // padding: 0,
       margin: 0,
       paddingBottom: "0px",
+      padding: 0,
     },
     terminalContainer: {
       // Set maximum height to fit within viewport
@@ -139,6 +140,7 @@ function App() {
       marginBottom: 25,
       width: "100%",
       height: "100%",
+      paddingBottom: "2%",
       //  backgroundColor: "#f0f0f",
       overflowY: "auto",
       //float:"bo
@@ -158,10 +160,10 @@ function App() {
       padding: 0,
       margin: 0,
       width: "100%",
-      height: "80vw",
+      height: "100vw",
       //padding: 1rem;
 
-      backgroundColor: "#333" /* Change the background color as desired */,
+      backgroundColor: "#1e1d1e" /* Change the background color as desired */,
     },
     waveFormPanel: {
       top: 0,
@@ -170,11 +172,11 @@ function App() {
       height: "100%",
       width: "100%",
       height: "80vw",
-      backgroundColor: "#333" /* Change the background color as desired */,
+      // backgroundColor: "#1e1d1e" /* Change the background color as desired */,
     },
 
     tabIst: {
-      borderTop: "2px solid #565656",
+      borderTop: "2px solid #404040",
       backgroundColor: "#565656",
     },
 
@@ -257,13 +259,12 @@ function App() {
   // }
 
   function MyList({ items }) {
-    if (!Array.isArray(items)) {
+    if (items.length == 0) {
       return <div>No items to display</div>;
     }
 
     return (
       <div>
-        <h2>List:</h2>
         {items.map((item, index) => (
           <div
             key={index}
@@ -281,6 +282,7 @@ function App() {
   async function setEditorFromFile(fileName) {
     // add function to check if directory here !
     //
+
     let finalName = fileName.path + "/" + fileName.name;
 
     const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
@@ -288,26 +290,31 @@ function App() {
 
     let typist = typeof invokeReturn;
     if (typist == "string") {
-      await addTab(fileName);
+      if (openTabs.indexOf(fileName.name) == -1) {
+        addTab(fileName);
+      } else {
+        setActiveFile(openTabs.indexOf(fileName.name));
+      }
+
       setCode(invokeReturn);
       //console.log(newCode);
       let newLanguage = "javascript";
       const extension = finalName.split(".").pop();
+      console.log(extension);
       if (["css", "html", "python", "dart", "json"].includes(extension)) {
         newLanguage = extension;
-      }
-      if ("lock".includes(extension)) {
+      } else if ("lock".includes(extension)) {
         newLanguage = "yaml";
-      }
-      if ("sv".includes(extension)) {
+      } else if ("sv".includes(extension)) {
         newLanguage = "systemverilog";
-      }
-      if ("v".includes(extension)) {
+      } else if ("v".includes(extension)) {
         newLanguage = "verilog";
+      } else {
+        newLanguage = "plaintext";
       }
-      console.log(openTabs);
       setLanguage(newLanguage);
-      //console.log(language);
+      console.log(newLanguage + "new language ");
+      console.log(language + "language");
       setFilePath(finalName);
     } else {
       console.log("opening new folder");
@@ -329,19 +336,19 @@ function App() {
       const extension = finalName.split(".").pop();
       if (["css", "html", "python", "dart", "json"].includes(extension)) {
         newLanguage = extension;
-      }
-      if ("lock".includes(extension)) {
+      } else if ("lock".includes(extension)) {
         newLanguage = "yaml";
-      }
-      if ("sv".includes(extension)) {
+      } else if ("sv".includes(extension)) {
         newLanguage = "systemverilog";
-      }
-      if ("v".includes(extension)) {
+      } else if ("v".includes(extension)) {
         newLanguage = "verilog";
+      } else {
+        newLanguage = "plaintext";
       }
       console.log(openTabs);
       setLanguage(newLanguage);
-      //console.log(language);
+
+      console.log(language);
       setFilePath(finalName);
     } else {
       console.log("opening new folder");
@@ -351,6 +358,7 @@ function App() {
     //const finalName = fileName.path + "/" + fileName.name;
     setOpenTab((prevOpenTabs) => [...prevOpenTabs, fileName.name]);
     setOpenFile((prevOpenFiles) => [...prevOpenFiles, fileName]);
+    setActiveFile(openFiles.length);
   };
   function handleResize(size) {
     if (TerminalDisplay) {
@@ -385,8 +393,8 @@ function App() {
           flexDirection: "row",
           height: "5%",
           width: "100%",
-          borderBottom: "2px solid #565656",
-          backgroundColor: "#18191A",
+          borderBottom: "1px solid #565656",
+          backgroundColor: "#323232",
         }}
       >
         <div style={{ position: "relative" }}>
@@ -426,7 +434,7 @@ function App() {
       <div className={styles.fileManager}>
         <div
           style={{
-            backgroundColor: "blue",
+            backgroundColor: "#141414",
             display: "flex",
             flexDirection: "row",
           }}
@@ -434,14 +442,19 @@ function App() {
           {openTabs.map((tab, index) => (
             <button
               style={{
-                backgroundColor: activeFile === index ? "#565656" : "black", // Change colors as desired
+                backgroundColor: activeFile === index ? "#232323" : "#141414", // Change colors as desired
                 color: "white",
-                border: "2px solid #565656",
-                // borderRight: "2px solid #565656",
-                paddingRight: "2%",
-                paddingLeft: "2%",
-                paddingTop: "5px",
-                paddingBottom: "5px",
+                border: "none",
+                //backgroundColor: "#141414",
+                borderRight: "1px solid #404040",
+                borderLeft: "1px solid #404040",
+                // borderTop: "1px solid #404040",
+                paddingRight: "10%",
+                paddingLeft: "10%",
+                paddingTop: "10px",
+                paddingBottom: "10px",
+                justifyContent: "flex-start",
+                alignItems: "flex-start",
               }}
               key={index}
               className={activeFile === index ? "active" : ""}
@@ -453,89 +466,91 @@ function App() {
         </div>
       </div>
 
-      <PanelGroup direction="vertical">
-        <Panel defaultSize={80}>
-          <PanelGroup direction="horizontal">
-            <Panel minSize={5} defaultSize={10}>
-              <div style={styles.sideBar}>
-                <MyList items={files} />
-              </div>
-            </Panel>
-            <PanelResizeHandle />
-            <Panel minSize={25} defaultSize={75}>
-              <div style={styles.editor}>
-                <Editor
-                  height="90vh"
-                  defaultLanguage="javascript"
-                  language={language}
-                  value={code}
-                  theme="vs-dark"
-                  onChange={(newCode) => {
-                    setCode(newCode);
-                  }}
-                  options={{
-                    minimap: {
-                      enabled: false,
-                    },
-                  }}
-                />
-              </div>
-            </Panel>
-            <PanelResizeHandle />
-          </PanelGroup>
+      <PanelGroup direction="horizontal">
+        <Panel minSize={5} defaultSize={10}>
+          <div style={styles.sideBar}>
+            <MyList items={files} />
+          </div>
         </Panel>
-        <PanelResizeHandle style={{ borderTop: "2px solid #565656" }} />
-        <Panel
-          id="term-panel"
-          minSize={10}
-          defaultSize={40}
-          onResize={(size) => handleResize(size)}
-        >
-          <div className={styles.tabManager}>
-            <div className={{ backgroundColor: "#565656" }}>
-              {tabs.map((tab, index) => (
-                <button
-                  style={{
-                    backgroundColor: activeTab === index ? "#565656" : "black", // Change colors as desired
-                    color: "white",
-                    border: "none",
-                    borderRight: "2px solid #565656",
-                    paddingRight: "2%",
-                    paddingLeft: "2%",
-                    paddingTop: "5px",
-                    paddingBottom: "5px",
-                  }}
-                  key={index}
-                  className={activeTab === index ? "active" : ""}
-                  onClick={() => handleTabClick(index)}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <div className={styles.tabContent}>
-              {activeTab === 0 && (
-                <div style={styles.terminal}>
-                  <Xterm
-                    ref={(ref) => {
-                      setTerminal(ref ? ref.getTerminal() : null);
+        <PanelResizeHandle style={{ border: "0.5px solid #404040" }} />
+        <Panel defaultSize={80}>
+          <PanelGroup direction="vertical">
+            <Panel minSize={25} defaultSize={75}>
+              {openFiles.length > 0 && (
+                <div style={styles.editor}>
+                  <Editor
+                    height="90vh"
+                    defaultLanguage="javascript"
+                    language={language}
+                    value={code}
+                    theme="vs-dark"
+                    onChange={(newCode) => {
+                      setCode(newCode);
                     }}
-                    onInit={onTermInit}
-                    onDispose={onTermDispose}
-                    onData={handleData}
-                    fontSize={14}
-                    // scrollBack={}
-                    //ssr={false}
+                    options={{
+                      minimap: {
+                        enabled: false,
+                      },
+                    }}
                   />
                 </div>
               )}
-              {activeTab === 1 && (
-                <div style={styles.waveFormPanel}>
-                  <WaveformGraph parsedData={parseData} />
+            </Panel>
+            <PanelResizeHandle style={{ borderTop: "2px solid #404040" }} />
+            <Panel
+              id="term-panel"
+              minSize={10}
+              defaultSize={40}
+              onResize={(size) => handleResize(size)}
+            >
+              <div className={styles.tabManager}>
+                <div className={{ backgroundColor: "#565656" }}>
+                  {tabs.map((tab, index) => (
+                    <button
+                      style={{
+                        backgroundColor:
+                          activeTab === index ? "#565656" : "black", // Change colors as desired
+                        color: "white",
+                        border: "none",
+                        borderRight: "2px solid #404040",
+                        paddingRight: "2%",
+                        paddingLeft: "2%",
+                        paddingTop: "5px",
+                        paddingBottom: "5px",
+                      }}
+                      key={index}
+                      className={activeTab === index ? "active" : ""}
+                      onClick={() => handleTabClick(index)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
+                <div className={styles.tabContent}>
+                  {activeTab === 0 && (
+                    <div style={styles.terminal}>
+                      <Xterm
+                        ref={(ref) => {
+                          setTerminal(ref ? ref.getTerminal() : null);
+                        }}
+                        onInit={onTermInit}
+                        onDispose={onTermDispose}
+                        onData={handleData}
+                        fontSize={14}
+                        // scrollBack={}
+                        //ssr={false}
+                      />
+                    </div>
+                  )}
+                  {activeTab === 1 && (
+                    <div style={styles.waveFormPanel}>
+                      <WaveformGraph parsedData={parseData} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Panel>
+          </PanelGroup>
         </Panel>
       </PanelGroup>
     </div>
