@@ -3,12 +3,16 @@ module.exports = [
   {
     test: /\.jsx?$/,
     use: {
-      loader: 'babel-loader',
+      loader: "babel-loader",
       options: {
         exclude: /node_modules/,
-        presets: ['@babel/preset-react']
-      }
-    }
+        presets: ["@babel/preset-react"],
+      },
+    },
+  },
+  {
+    test: /\.(gif|svg|jpg|png)$/,
+    loader: "file-loader",
   },
   // ... existing loader config ...
 ];

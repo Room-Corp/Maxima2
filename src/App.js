@@ -15,6 +15,8 @@ import {
 import { WaveGraph } from "d3-wave";
 import { VcdParser } from "./Parser.js";
 import WaveformGraph from "./WaveformGraph";
+import saveIcon from "./icons/saveicon.png";
+import openIcon from "./icons/openfile.png";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
@@ -61,6 +63,10 @@ function App() {
 
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ["Terminal", "Wave Form Viewer"];
+
+  const [openTabs, setOpenTab] = useState([]);
+  const [openFiles, setOpenFile] = useState([]);
+  const [activeFile, setActiveFile] = useState(-1);
 
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
@@ -145,6 +151,7 @@ function App() {
     },
     editor: {
       width: "100%",
+      height: "100%",
     },
     sideBar: {
       top: 0,
@@ -152,9 +159,10 @@ function App() {
       margin: 0,
       width: "100%",
       height: "80vw",
+      //padding: 1rem;
+
       backgroundColor: "#333" /* Change the background color as desired */,
     },
-
     waveFormPanel: {
       top: 0,
       padding: 0,
@@ -172,6 +180,10 @@ function App() {
 
     tabManager: {
       backgroundColor: "#565656",
+    },
+    fileManager: {
+      display: "flex",
+      flexDirection: "row",
     },
   };
   const onTermInit = (term) => {
@@ -248,45 +260,6 @@ function App() {
     if (!Array.isArray(items)) {
       return <div>No items to display</div>;
     }
-    async function setEditor(fileName) {
-      // add function to check if directory here !
-      //
-      let finalName = fileName.path + "/" + fileName.name;
-      console.log(finalName);
-      //ipcRenderer.send("get-code", finalName);
-      // ipcRenderer.on("directory-contentsInside", (event, files) => {
-      //   console.log("Files in directory:", files);
-      // }
-      // );
-      const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
-      console.log(invokeReturn);
-
-      let typist = typeof invokeReturn;
-      if (typist == "string") {
-        setCode(invokeReturn);
-        //console.log(newCode);
-        let newLanguage = "javascript";
-        const extension = finalName.split(".").pop();
-        if (["css", "html", "python", "dart", "json"].includes(extension)) {
-          newLanguage = extension;
-        }
-        if ("lock".includes(extension)) {
-          newLanguage = "yaml";
-        }
-        if ("sv".includes(extension)) {
-          newLanguage = "systemverilog";
-        }
-        if ("v".inclues(extension)) {
-          newLanguage = "verilog";
-        }
-
-        setLanguage(newLanguage);
-        //console.log(language);
-        setFilePath(finalName);
-      } else {
-        console.log("opening new folder");
-      }
-    }
 
     return (
       <div>
@@ -295,7 +268,7 @@ function App() {
           <div
             key={index}
             style={{ border: "3px solid rgb(212, 212, 212)", padding: "2px" }}
-            onClick={() => setEditor(item)}
+            onClick={() => setEditorFromFile(item)}
           >
             <li style={{ listStyleType: "none" }}>
               <p>{item.name.replace("Name: ", "")}</p>
@@ -305,7 +278,80 @@ function App() {
       </div>
     );
   }
+  async function setEditorFromFile(fileName) {
+    // add function to check if directory here !
+    //
+    let finalName = fileName.path + "/" + fileName.name;
 
+    const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
+    //console.log(invokeReturn);
+
+    let typist = typeof invokeReturn;
+    if (typist == "string") {
+      await addTab(fileName);
+      setCode(invokeReturn);
+      //console.log(newCode);
+      let newLanguage = "javascript";
+      const extension = finalName.split(".").pop();
+      if (["css", "html", "python", "dart", "json"].includes(extension)) {
+        newLanguage = extension;
+      }
+      if ("lock".includes(extension)) {
+        newLanguage = "yaml";
+      }
+      if ("sv".includes(extension)) {
+        newLanguage = "systemverilog";
+      }
+      if ("v".includes(extension)) {
+        newLanguage = "verilog";
+      }
+      console.log(openTabs);
+      setLanguage(newLanguage);
+      //console.log(language);
+      setFilePath(finalName);
+    } else {
+      console.log("opening new folder");
+    }
+  }
+  async function setEditor(fileName) {
+    // add function to check if directory here !
+    //
+    let finalName = fileName.path + "/" + fileName.name;
+
+    const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
+    //console.log(invokeReturn);
+
+    let typist = typeof invokeReturn;
+    if (typist == "string") {
+      setCode(invokeReturn);
+      //console.log(newCode);
+      let newLanguage = "javascript";
+      const extension = finalName.split(".").pop();
+      if (["css", "html", "python", "dart", "json"].includes(extension)) {
+        newLanguage = extension;
+      }
+      if ("lock".includes(extension)) {
+        newLanguage = "yaml";
+      }
+      if ("sv".includes(extension)) {
+        newLanguage = "systemverilog";
+      }
+      if ("v".includes(extension)) {
+        newLanguage = "verilog";
+      }
+      console.log(openTabs);
+      setLanguage(newLanguage);
+      //console.log(language);
+      setFilePath(finalName);
+    } else {
+      console.log("opening new folder");
+    }
+  }
+  const addTab = async (fileName) => {
+    //const finalName = fileName.path + "/" + fileName.name;
+    setOpenTab((prevOpenTabs) => [...prevOpenTabs, fileName.name]);
+    setOpenFile((prevOpenFiles) => [...prevOpenFiles, fileName]);
+  };
   function handleResize(size) {
     if (TerminalDisplay) {
       console.log(size);
@@ -326,16 +372,87 @@ function App() {
     setActiveTab(index);
   };
 
+  const handleFileClick = async (index) => {
+    setActiveFile(index);
+    await setEditor(openFiles[index]);
+  };
+
   return (
     <div style={styles.container}>
-      <input
-        type="file"
-        className="hidden"
-        directory=""
-        webkitdirectory=""
-        onChange={folderOnChange}
-      />
-      <button onClick={saveFile}>Save Changes</button>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          height: "5%",
+          width: "100%",
+          borderBottom: "2px solid #565656",
+          backgroundColor: "#18191A",
+        }}
+      >
+        <div style={{ position: "relative" }}>
+          <label htmlFor="folderInput">
+            <img
+              style={{
+                width: "25px",
+                height: "25px",
+                fill: "#E74C3C",
+                paddingTop: "8px",
+              }}
+              src={openIcon}
+              alt="Folder Icon"
+            />
+          </label>
+          <input
+            type="file"
+            id="folderInput"
+            className="hiddenInput"
+            directory=""
+            webkitdirectory=""
+            onChange={folderOnChange}
+            style={{ overflow: "hidden", display: "none" }}
+          />
+        </div>
+        <button
+          style={{ backgroundColor: "transparent", border: "none" }}
+          onClick={saveFile}
+        >
+          <img
+            src={saveIcon}
+            style={{ width: "25px", height: "25px" }}
+            alt="Save Icon"
+          />
+        </button>
+      </div>
+      <div className={styles.fileManager}>
+        <div
+          style={{
+            backgroundColor: "blue",
+            display: "flex",
+            flexDirection: "row",
+          }}
+        >
+          {openTabs.map((tab, index) => (
+            <button
+              style={{
+                backgroundColor: activeFile === index ? "#565656" : "black", // Change colors as desired
+                color: "white",
+                border: "2px solid #565656",
+                // borderRight: "2px solid #565656",
+                paddingRight: "2%",
+                paddingLeft: "2%",
+                paddingTop: "5px",
+                paddingBottom: "5px",
+              }}
+              key={index}
+              className={activeFile === index ? "active" : ""}
+              onClick={() => handleFileClick(index)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <PanelGroup direction="vertical">
         <Panel defaultSize={80}>
           <PanelGroup direction="horizontal">

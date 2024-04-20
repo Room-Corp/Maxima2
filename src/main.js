@@ -107,7 +107,6 @@ function isDirectory(path) {
 }
 
 ipcMain.handle("get-code", async (event, filePath) => {
-  console.log("bozo");
   if (isDirectory(filePath)) {
     console.log("directory");
     try {
