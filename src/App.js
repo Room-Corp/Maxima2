@@ -431,40 +431,6 @@ function App() {
           />
         </button>
       </div>
-      <div className={styles.fileManager}>
-        <div
-          style={{
-            backgroundColor: "#141414",
-            display: "flex",
-            flexDirection: "row",
-          }}
-        >
-          {openTabs.map((tab, index) => (
-            <button
-              style={{
-                backgroundColor: activeFile === index ? "#232323" : "#141414", // Change colors as desired
-                color: "white",
-                border: "none",
-                //backgroundColor: "#141414",
-                borderRight: "1px solid #404040",
-                borderLeft: "1px solid #404040",
-                // borderTop: "1px solid #404040",
-                paddingRight: "5%",
-                paddingLeft: "5%",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-                justifyContent: "flex-start",
-                alignItems: "flex-start",
-              }}
-              key={index}
-              className={activeFile === index ? "active" : ""}
-              onClick={() => handleFileClick(index)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <PanelGroup direction="horizontal">
         <Panel minSize={5} defaultSize={10}>
@@ -475,6 +441,43 @@ function App() {
         <PanelResizeHandle style={{ border: "0.5px solid #404040" }} />
         <Panel defaultSize={80}>
           <PanelGroup direction="vertical">
+            <Panel defaultSize={5}>
+              <div className={styles.fileManager}>
+                <div
+                  style={{
+                    backgroundColor: "#141414",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  {openTabs.map((tab, index) => (
+                    <button
+                      style={{
+                        backgroundColor:
+                          activeFile === index ? "#232323" : "#141414", // Change colors as desired
+                        color: "white",
+                        border: "none",
+                        //backgroundColor: "#141414",
+                        borderRight: "1px solid #404040",
+                        borderLeft: "1px solid #404040",
+                        // borderTop: "1px solid #404040",
+                        paddingRight: "5%",
+                        paddingLeft: "5%",
+                        paddingTop: "10px",
+                        paddingBottom: "10px",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                      }}
+                      key={index}
+                      className={activeFile === index ? "active" : ""}
+                      onClick={() => handleFileClick(index)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Panel>
             <Panel minSize={25} defaultSize={75}>
               {openFiles.length > 0 && (
                 <div style={styles.editor}>
