@@ -31,6 +31,7 @@ const {
 } = require("@wavedrom/doppler");
 
 const { createCodeMirrorState, mountCodeMirror6 } = require("waveql");
+const { useEffect } = require("react");
 
 // Initialize node-pty with an appropriate shell
 let mainWindow;
@@ -76,6 +77,24 @@ let count = 0;
 let row = 0;
 let col = 0;
 let ptyProcess;
+
+const getWaveql = async (readers) => {
+  let waveql;
+  const r = readers.find((reader) => reader.ext === "waveql");
+  if (r && r.reader) {
+    // console.log('WaveQL', r);
+    const utf8Decoder = new TextDecoder("utf-8");
+    waveql = "";
+    for (let i = 0; i < 1e5; i++) {
+      const { done, value } = await r.reader.read();
+      waveql += value ? utf8Decoder.decode(value, { stream: true }) : "";
+      if (done) {
+        break;
+      }
+    }
+  }
+  return waveql;
+};
 
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
@@ -297,12 +316,37 @@ ipcMain.on("get-wave", async (event, vcdPath, divName) => {
 
     //content.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
 
+    const content = getElement(divName);
+    content.innerHTML = stringify("");
+
     const mod = await createVCD();
     const inst = await webVcdParser(mod); // VCD parser instance
 
-    const handler = getHandler(divElement, inst);
+    useEffect(() => {
+      const handler = getHandler(content, inst);
+    });
+
     const vcdFilePath = vcdPath;
-    await getReaders(handler, vcdFilePath);
+
+    const resp = await fetch("http://localhost:9000/vcdPath");
+    const body = resp.body;
+    const reader = body.getReader();
+
+    const getPathBaseName = (path) => {
+      const p1 = path.split("/");
+      const res = p1.pop();
+      return res;
+    };
+
+    await handler({
+      key: "local",
+      value: vcdPath,
+      format: "raw",
+      baseName: getPathBaseName(vcdPath),
+      url: vcdPath,
+      reader,
+    });
+
     await window.webContents.executeJavaScript(`
           const divElement = document.getElementById('${divName}');
           divElement.innerHTML = \`<div>Wave Visualization</div>\`;
