@@ -48,6 +48,7 @@
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^2.0.13",
     "url-loader": "^4.1.1",
+    "vcdrom": "^1.6.0",
     "xterm-react": "^1.0.0"
   }
 }
