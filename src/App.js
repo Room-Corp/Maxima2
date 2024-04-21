@@ -21,6 +21,8 @@ import verilogIcon from "./icons/verilog.png";
 import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
 
+//import { VCDrom } from "vcdrom";
+
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
 function useWindowDimensions() {
@@ -65,7 +67,7 @@ function App() {
   const [parseData, setParsedData] = useState();
 
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ["Terminal", "Wave Form Viewer"];
+  const tabs = ["Terminal", "Wave Form Viewer", "VcDrom"];
 
   const [openTabs, setOpenTab] = useState([]);
   const [openFiles, setOpenFile] = useState([]);
@@ -208,9 +210,11 @@ function App() {
     ipcRenderer.invoke("prepare-input", terminalInfo);
     handleResize(40);
   };
+
   const onTermDispose = (term) => {
     setTerminalDisplay(null);
   };
+
   let count = 0;
   const handleData = (data) => {
     if (TerminalDisplay) {
@@ -616,6 +620,14 @@ function App() {
                   {activeTab === 1 && (
                     <div style={styles.waveFormPanel}>
                       <WaveformGraph parsedData={parseData} />
+                    </div>
+                  )}
+                  {activeTab == 2 && ( //WaveFormVRom()
+                    <div>
+                      <h1>Main Class</h1>
+                      <div id="vcdContainer">
+                        <VCDromComponent vcdPath="/Users/farhankhan/Maxima2/src/test/swerv1.vcd" />
+                      </div>
                     </div>
                   )}
                 </div>
