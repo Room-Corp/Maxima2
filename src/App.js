@@ -17,6 +17,9 @@ import { VcdParser } from "./Parser.js";
 import WaveformGraph from "./WaveformGraph";
 import saveIcon from "./icons/saveicon.png";
 import openIcon from "./icons/openfile.png";
+import verilogIcon from "./icons/verilog.png";
+import systemVerilogIcon from "./icons/svicon2.png";
+import fileIconNew from "./icons/fileIconNew.png";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
@@ -268,17 +271,79 @@ function App() {
         {items.map((item, index) => (
           <div
             key={index}
-            style={{ border: "3px solid rgb(212, 212, 212)", padding: "2px" }}
+            style={{ padding: "2px", fontSize: "14px" }}
             onClick={() => setEditorFromFile(item)}
           >
-            <li style={{ listStyleType: "none" }}>
-              <p>{item.name.replace("Name: ", "")}</p>
+            <li
+              style={{
+                listStyleType: "none",
+                display: "flex",
+                alignItems: "center",
+                backgroundColor: "transparent", // Set initial background color
+                transition: "background-color 0.3s ease", // Add transition for smooth effect
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => handleMouseEnter(e)}
+              onMouseLeave={(e) => handleMouseLeave(e)}
+            >
+              <div
+                style={{ display: "flex", flexDirection: "row", gap: "10px" }}
+              >
+                {renderFileIcon(item.name)}
+                <p>{item.name.replace("Name: ", "")}</p>
+              </div>
             </li>
           </div>
         ))}
       </div>
     );
   }
+
+  const handleMouseEnter = (e) => {
+    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Change background color on hover
+  };
+
+  const handleMouseLeave = (e) => {
+    e.currentTarget.style.backgroundColor = "transparent"; // Reset background color on mouse leave
+  };
+  const renderFileIcon = (fileName) => {
+    const extension = fileName.split(".").pop().toLowerCase();
+    switch (extension) {
+      case "v":
+        return (
+          <img
+            src={verilogIcon}
+            style={{
+              paddingTop: "8px",
+              width: "24px", // Increase the width
+              height: "24px", // Increase the height
+              objectFit: "contain",
+              paddingLeft: "4px",
+            }}
+          />
+        );
+      case "sv":
+        return (
+          <img
+            src={systemVerilogIcon}
+            style={{
+              paddingTop: "8px",
+              paddingLeft: "4px",
+              height: "24px" /* Container height */,
+              width: "24px" /* Container width */,
+              objectFit: "cover",
+            }}
+          />
+        );
+      default:
+        return (
+          <img
+            src={fileIconNew}
+            style={{ paddingTop: "12px", height: "24px", width: "24px" }}
+          />
+        );
+    }
+  };
   async function setEditorFromFile(fileName) {
     // add function to check if directory here !
     //
@@ -395,14 +460,16 @@ function App() {
           width: "100%",
           borderBottom: "1px solid #565656",
           backgroundColor: "#323232",
+          paddingLeft: "2%",
+          gap: "2%",
         }}
       >
         <div style={{ position: "relative" }}>
           <label htmlFor="folderInput">
             <img
               style={{
-                width: "25px",
-                height: "25px",
+                width: "24px",
+                height: "24px",
                 fill: "#E74C3C",
                 paddingTop: "8px",
               }}
@@ -426,7 +493,7 @@ function App() {
         >
           <img
             src={saveIcon}
-            style={{ width: "25px", height: "25px" }}
+            style={{ width: "24px", height: "24px" }}
             alt="Save Icon"
           />
         </button>
@@ -456,6 +523,7 @@ function App() {
                         activeFile === index ? "#232323" : "#141414", // Change colors as desired
                       color: "white",
                       border: "none",
+                      cursor: "pointer",
                       //backgroundColor: "#141414",
                       borderRight: "1px solid #404040",
                       borderLeft: "1px solid #404040",
@@ -514,6 +582,7 @@ function App() {
                           activeTab === index ? "#232323" : "#141414", // Change colors as desired
                         color: "white",
                         border: "none",
+                        cursor: "pointer",
                         borderRight: "1px solid #404040",
                         paddingRight: "2.5%",
                         paddingLeft: "2.5%",
