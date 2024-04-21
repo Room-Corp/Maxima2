@@ -11,4 +11,8 @@ module.exports = {
   externals: {
     "node-pty": "commonjs node-pty",
   },
+  experiments: {
+    asyncWebAssembly: true,
+    syncWebAssembly: true,
+  },
 };

@@ -1,4 +1,5 @@
 const { app, ipcMain, BrowserWindow } = require("electron");
+const vcdModule = require("./vcd.wasm");
 const path = require("path");
 //var Terminal = require('xterm').Terminal;
 const pty = require("node-pty");
@@ -9,6 +10,27 @@ const createVCD = require("vcd-stream/out/vcd.js");
 const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
 const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
 const getVcd = require("vcd-stream/lib/get-vcd.js");
+
+const stringify = require("onml/stringify.js");
+
+const { StyleModule } = require("style-mod");
+const getReaders = require("./get-readers.js");
+
+const {
+  domContainer,
+  pluginRenderValues,
+  pluginRenderTimeGrid,
+  keyBindo,
+  mountTree,
+  getElement,
+  getListing,
+  genKeyHandler,
+  genOnWheel,
+  themeAll,
+  helpPanel,
+} = require("@wavedrom/doppler");
+
+const { createCodeMirrorState, mountCodeMirror6 } = require("waveql");
 
 // Initialize node-pty with an appropriate shell
 let mainWindow;
@@ -128,6 +150,166 @@ ipcMain.handle("get-code", async (event, filePath) => {
     var buffer = fs.readFileSync(filePath);
     return buffer.toString();
     //event.reply("extracted-code", buffer.toString());
+  }
+});
+
+ipcMain.on("get-wave", async (event, vcdPath, divName) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  const getHandler = (content, inst) => async (readers) => {
+    const waveql = await getWaveql(readers);
+    const listing = await getListing(readers);
+    const jsonls = await getJsonls(readers);
+    console.log(jsonls);
+    const timeOpt = readers.find((row) => row.key === "time");
+
+    vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
+      content.innerHTML = "";
+      deso.waveql = waveql;
+      deso.listing = listing;
+      deso.timeOpt = timeOpt;
+      deso.jsonls = jsonls;
+
+      const container = domContainer({
+        elemento: mountTree.defaultElemento,
+        layers: mountTree.defaultLayers,
+        renderPlugins: [
+          pluginRenderTimeGrid,
+          pluginRenderValues,
+          pluginLocalStore,
+        ],
+        pluginRightPanel: (elo) => {
+          elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
+        },
+      });
+
+      content.appendChild(container.pstate.container);
+      container.start(deso);
+
+      container.elo.menu.innerHTML = stringify(
+        helpPanel.mlIcon(
+          "https://github.com/wavedrom/vcdrom/blob/trunk/help.md",
+        ),
+      );
+      container.elo.menu.addEventListener("click", () =>
+        helpPanel.toggle(container.pstate),
+      );
+
+      deso.hasHistory = true;
+      deso.isRO = true;
+      deso.updater = (/* str */) => {
+        console.log("updater");
+      };
+
+      const cmState = createCodeMirrorState(deso, container.pstate);
+
+      const cm = mountCodeMirror6(
+        cmState,
+        container.elo.waveqlPanel,
+        deso,
+        container.pstate,
+      );
+
+      cm.view.dispatch({ changes: { from: 0, insert: " " } });
+      cm.view.dispatch({ changes: { from: 0, to: 1, insert: "" } });
+
+      container.elo.container.addEventListener(
+        "keydown",
+        genKeyHandler.genKeyHandler(
+          content,
+          container.pstate,
+          deso,
+          cm,
+          keyBindo,
+        ),
+      );
+      container.elo.container.addEventListener(
+        "wheel",
+        genOnWheel(content, container.pstate, deso, cm, keyBindo),
+      );
+      // console.log(cm);
+      cm.view.focus();
+    });
+
+    await getVcd(readers, content, inst);
+    console.log("getVcd");
+  };
+  const getJsonls = async (readers) => {
+    const jsonls = [];
+    const utf8Decoder = new TextDecoder("utf-8");
+    for (const r of readers) {
+      if (r.ext !== "jsonl" && r.ext !== "jsonl") {
+        continue;
+      }
+      // console.log('JSONL', r);
+      let tail = "";
+      const data = (r.data = []);
+      let lineNumber = 0;
+      for (let i = 0; i < 1e5; i++) {
+        const { done, value } = await r.reader.read();
+        tail += value ? utf8Decoder.decode(value) : "";
+        const lines = tail.split(/\n/);
+        // console.log(i, lines.length);
+        for (let j = 0; j < lines.length - 1; j++) {
+          lineNumber++;
+          try {
+            data.push(JSON.parse(lines[j]));
+          } catch (err) {
+            console.log("line: " + lineNumber + " chunk:" + i, lines[j], err);
+          }
+          tail = lines[lines.length - 1];
+        }
+        if (done) {
+          if (tail === "") {
+            break;
+          }
+          try {
+            data.push(JSON.parse(tail));
+          } catch (err) {
+            console.log(i, "tail", err);
+          }
+          break;
+        }
+      }
+      jsonls.push(r);
+    }
+    // console.log(jsonls);
+    return jsonls;
+  };
+
+  try {
+    // Get the existing <div> element
+    const divElement = await window.webContents.executeJavaScript(`
+          const div = document.getElementById('${divName}');
+          if (div) {
+            div.innerHTML = '';
+          } else {
+            throw new Error('Element with ID "${divName}" not found');
+          }
+        `);
+
+    // Your existing code to process the VCD file and render the wave visualization
+    // ...
+
+    // Update the <div> element with the wave visualization
+
+    //const themeAllMod = new StyleModule(themeAll);
+    //StyleModule.mount(mainWindow, themeAllMod);
+
+    //content.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
+
+    const mod = await createVCD();
+    const inst = await webVcdParser(mod); // VCD parser instance
+
+    const handler = getHandler(divElement, inst);
+    const vcdFilePath = vcdPath;
+    await getReaders(handler, vcdFilePath);
+    await window.webContents.executeJavaScript(`
+          const divElement = document.getElementById('${divName}');
+          divElement.innerHTML = \`<div>Wave Visualization</div>\`;
+        `);
+  } catch (error) {
+    console.error("Error getting wave:", error);
+    event.reply("get-wave-error", error.message);
   }
 });
 

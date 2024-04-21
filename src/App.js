@@ -20,6 +20,7 @@ import openIcon from "./icons/openfile.png";
 import verilogIcon from "./icons/verilog.png";
 import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
+import WaveDromContainer from "./vcdRomContainer.js";
 
 //import { VCDrom } from "vcdrom";
 //import Wave2 from "./vcdRomWave.js";
@@ -455,6 +456,15 @@ function App() {
     await setEditor(openFiles[index]);
   };
 
+  const openWaveDrom = () => {
+    ipcRenderer.send(
+      "get-wave",
+      "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
+      "waveContainer",
+    );
+    return "hi";
+  };
+
   return (
     <div style={styles.container}>
       <div
@@ -624,13 +634,10 @@ function App() {
                     </div>
                   )}
                   {activeTab == 2 && ( //WaveFormVRom()
-                    <div>
-                      <h1>Main Class</h1>
-                      {/* <Wave2
-                        divName={"h"}
-                        vcdPath={"/Users/farhankh/Maxima2/src/test/swerv1.vcd"}
-                      /> */}
-                    </div>
+                    <WaveDromContainer
+                      divName="waveContainer"
+                      vcdPath="/Users/farhankhan/Maxima2/src/test/swerv1.vcd"
+                    />
                   )}
                 </div>
               </div>

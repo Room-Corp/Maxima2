@@ -1230,6 +1230,18 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
+a@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.npmmirror.com/a/-/a-3.0.1.tgz#3ffe6fd39902bc1675de8fd52b9be6861473cd3f"
+  integrity sha512-7keco9nAKQNb1+EFWVpzHrPfrFEcpzDoeYoKBktoUq/TQO0cpGDQ63KBQ3486a5OV5OGRzKC0Xu/g9IQb205qA==
+  dependencies:
+    a_mock "1.0.5"
+
+a_mock@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.npmmirror.com/a_mock/-/a_mock-1.0.5.tgz#1db6ea996071d732f9924b3c63d4bb4125d19a3e"
+  integrity sha512-HnjqBn1raagaPlpT8+4A9ZP3ntlh3fuW7kpdoeiCapxtYYz8VPTOkyv7TdQ18b4kMHqMNfwqlWSurex8dXWMkw==
+
 abbrev@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -5317,7 +5329,7 @@ style-loader@^3.0.0:
   resolved "https://registry.yarnpkg.com/style-loader/-/style-loader-3.3.4.tgz#f30f786c36db03a45cbd55b6a70d930c479090e7"
   integrity sha512-0WqXzrsMTyb8yjZJHDqwmnwRJvhALK9LfRtRc6B4UTWe8AijYLZYZ9thuJTZc2VfQWINADW/j+LiJnfy2RoC1w==
 
-style-mod@^4.0.0, style-mod@^4.1.0:
+style-mod@^4.0.0, style-mod@^4.1.0, style-mod@^4.1.2:
   version "4.1.2"
   resolved "https://registry.npmmirror.com/style-mod/-/style-mod-4.1.2.tgz#ca238a1ad4786520f7515a8539d5a63691d7bf67"
   integrity sha512-wnD1HyVqpJUI2+eKZ+eo1UwghftP6yuFheBqqe+bWCotBjC2K1YnteJILRMs3SM4V/0dLEW1SC27MWP5y+mwmw==
