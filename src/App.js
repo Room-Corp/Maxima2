@@ -22,6 +22,7 @@ import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
 
 //import { VCDrom } from "vcdrom";
+//import Wave2 from "./vcdRomWave.js";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
@@ -625,9 +626,10 @@ function App() {
                   {activeTab == 2 && ( //WaveFormVRom()
                     <div>
                       <h1>Main Class</h1>
-                      <div id="vcdContainer">
-                        <VCDromComponent vcdPath="/Users/farhankhan/Maxima2/src/test/swerv1.vcd" />
-                      </div>
+                      {/* <Wave2
+                        divName={"h"}
+                        vcdPath={"/Users/farhankh/Maxima2/src/test/swerv1.vcd"}
+                      /> */}
                     </div>
                   )}
                 </div>

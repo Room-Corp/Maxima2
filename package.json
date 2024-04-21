@@ -38,18 +38,21 @@
   "license": "MIT",
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "@wavedrom/doppler": "^1.11.0",
     "d3-wave": "^1.1.5",
     "electron-squirrel-startup": "^1.0.0",
     "file-loader": "^6.2.0",
     "monaco-editor": "^0.47.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "node-pty": "^1.0.0",
+    "onml": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^2.0.13",
     "url-loader": "^4.1.1",
     "vcd-stream": "^1.5.0",
     "vcdrom": "^1.6.0",
+    "wavedrom": "^3.5.0",
     "waveql": "^1.8.0",
     "xterm-react": "^1.0.0"
   }

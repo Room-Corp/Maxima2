@@ -5,6 +5,11 @@ const pty = require("node-pty");
 const os = require("os");
 const fs = require("fs");
 
+const createVCD = require("vcd-stream/out/vcd.js");
+const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
+const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
+const getVcd = require("vcd-stream/lib/get-vcd.js");
+
 // Initialize node-pty with an appropriate shell
 let mainWindow;
 
