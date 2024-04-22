@@ -85,7 +85,7 @@ function App() {
     // switch this to work with relative paths
     const invokeReturn = await ipcRenderer.invoke(
       "get-code",
-      "/Users/varunvvs/Maxima2/src/test/swerv1.vcd",
+      "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
     );
     console.log(invokeReturn);
     console.log("filedone");
@@ -457,10 +457,12 @@ function App() {
   };
 
   const openWaveDrom = () => {
+    const divElement = document.getElementById("waveContaine");
+    const divContent = divElement.textContent;
     ipcRenderer.send(
       "get-wave",
       "/Users/varunvvs/Maxima2/src/test/swerv1.vcd",
-      "waveContainer",
+      divContent,
     );
     return "hi";
   };
@@ -541,7 +543,7 @@ function App() {
                       cursor: "pointer",
                       //backgroundColor: "#141414",
                       borderRight: "1px solid #404040",
-                      borderLeft: "1px solid #404040",
+                      //borderLeft: "1px solid #404040",
                       // borderTop: "1px solid #404040",
                       paddingRight: "5%",
                       paddingLeft: "5%",
@@ -636,7 +638,7 @@ function App() {
                   {activeTab == 2 && ( //WaveFormVRom()
                     <WaveDromContainer
                       divName="waveContainer"
-                      vcdPath="/Users/varunvvs/Maxima2/src/test/swerv1.vcd"
+                      vcdPath="/Users/farhakh/Maxima2/src/test/swerv1.vcd"
                     />
                   )}
                 </div>

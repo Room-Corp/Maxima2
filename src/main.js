@@ -172,8 +172,127 @@ ipcMain.handle("get-code", async (event, filePath) => {
   }
 });
 
+const getHandler = (content, inst) => async (readers) => {
+  const waveql = await getWaveql(readers);
+  const listing = await getListing(readers);
+  const jsonls = await getJsonls(readers);
+  const timeOpt = readers.find((row) => row.key === "time");
+
+  vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
+    content.innerHTML = "";
+    deso.waveql = waveql;
+    deso.listing = listing;
+    deso.timeOpt = timeOpt;
+    deso.jsonls = jsonls;
+
+    const container = domContainer({
+      elemento: mountTree.defaultElemento,
+      layers: mountTree.defaultLayers,
+      renderPlugins: [
+        pluginRenderTimeGrid,
+        pluginRenderValues,
+        pluginLocalStore,
+      ],
+      pluginRightPanel: (elo) => {
+        elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
+      },
+    });
+
+    content.appendChild(container.pstate.container);
+    container.start(deso);
+
+    container.elo.menu.innerHTML = stringify(
+      helpPanel.mlIcon("https://github.com/wavedrom/vcdrom/blob/trunk/help.md"),
+    );
+    container.elo.menu.addEventListener("click", () =>
+      helpPanel.toggle(container.pstate),
+    );
+
+    deso.hasHistory = true;
+    deso.isRO = true;
+    deso.updater = (/* str */) => {
+      console.log("updater");
+    };
+
+    const cmState = createCodeMirrorState(deso, container.pstate);
+
+    const cm = mountCodeMirror6(
+      cmState,
+      container.elo.waveqlPanel,
+      deso,
+      container.pstate,
+    );
+
+    cm.view.dispatch({ changes: { from: 0, insert: " " } });
+    cm.view.dispatch({ changes: { from: 0, to: 1, insert: "" } });
+
+    container.elo.container.addEventListener(
+      "keydown",
+      genKeyHandler.genKeyHandler(
+        content,
+        container.pstate,
+        deso,
+        cm,
+        keyBindo,
+      ),
+    );
+    container.elo.container.addEventListener(
+      "wheel",
+      genOnWheel(content, container.pstate, deso, cm, keyBindo),
+    );
+    // console.log(cm);
+    cm.view.focus();
+  });
+
+  await getVcd(readers, content, inst);
+  console.log("getVcd");
+};
+const getJsonls = async (readers) => {
+  const jsonls = [];
+  const utf8Decoder = new TextDecoder("utf-8");
+  for (const r of readers) {
+    if (r.ext !== "jsonl" && r.ext !== "jsonl") {
+      continue;
+    }
+    // console.log('JSONL', r);
+    let tail = "";
+    const data = (r.data = []);
+    let lineNumber = 0;
+    for (let i = 0; i < 1e5; i++) {
+      const { done, value } = await r.reader.read();
+      tail += value ? utf8Decoder.decode(value) : "";
+      const lines = tail.split(/\n/);
+      // console.log(i, lines.length);
+      for (let j = 0; j < lines.length - 1; j++) {
+        lineNumber++;
+        try {
+          data.push(JSON.parse(lines[j]));
+        } catch (err) {
+          console.log("line: " + lineNumber + " chunk:" + i, lines[j], err);
+        }
+        tail = lines[lines.length - 1];
+      }
+      if (done) {
+        if (tail === "") {
+          break;
+        }
+        try {
+          data.push(JSON.parse(tail));
+        } catch (err) {
+          console.log(i, "tail", err);
+        }
+        break;
+      }
+    }
+    jsonls.push(r);
+  }
+  // console.log(jsonls);
+  return jsonls;
+};
+
 ipcMain.on("get-wave", async (event, vcdPath, divName) => {
   const window = BrowserWindow.fromWebContents(event.sender);
+
   const getHandler = (content, inst) => async (readers) => {
     const waveql = await getWaveql(readers);
     const listing = await getListing(readers);
@@ -181,176 +300,24 @@ ipcMain.on("get-wave", async (event, vcdPath, divName) => {
     console.log(jsonls);
     const timeOpt = readers.find((row) => row.key === "time");
 
-    vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
-      content.innerHTML = "";
-      deso.waveql = waveql;
-      deso.listing = listing;
-      deso.timeOpt = timeOpt;
-      deso.jsonls = jsonls;
-
-      const container = domContainer({
-        elemento: mountTree.defaultElemento,
-        layers: mountTree.defaultLayers,
-        renderPlugins: [
-          pluginRenderTimeGrid,
-          pluginRenderValues,
-          pluginLocalStore,
-        ],
-        pluginRightPanel: (elo) => {
-          elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
-        },
-      });
-
-      content.appendChild(container.pstate.container);
-      container.start(deso);
-
-      container.elo.menu.innerHTML = stringify(
-        helpPanel.mlIcon(
-          "https://github.com/wavedrom/vcdrom/blob/trunk/help.md",
-        ),
-      );
-      container.elo.menu.addEventListener("click", () =>
-        helpPanel.toggle(container.pstate),
-      );
-
-      deso.hasHistory = true;
-      deso.isRO = true;
-      deso.updater = (/* str */) => {
-        console.log("updater");
-      };
-
-      const cmState = createCodeMirrorState(deso, container.pstate);
-
-      const cm = mountCodeMirror6(
-        cmState,
-        container.elo.waveqlPanel,
-        deso,
-        container.pstate,
-      );
-
-      cm.view.dispatch({ changes: { from: 0, insert: " " } });
-      cm.view.dispatch({ changes: { from: 0, to: 1, insert: "" } });
-
-      container.elo.container.addEventListener(
-        "keydown",
-        genKeyHandler.genKeyHandler(
-          content,
-          container.pstate,
-          deso,
-          cm,
-          keyBindo,
-        ),
-      );
-      container.elo.container.addEventListener(
-        "wheel",
-        genOnWheel(content, container.pstate, deso, cm, keyBindo),
-      );
-      // console.log(cm);
-      cm.view.focus();
-    });
-
     await getVcd(readers, content, inst);
     console.log("getVcd");
   };
-  const getJsonls = async (readers) => {
-    const jsonls = [];
-    const utf8Decoder = new TextDecoder("utf-8");
-    for (const r of readers) {
-      if (r.ext !== "jsonl" && r.ext !== "jsonl") {
-        continue;
-      }
-      // console.log('JSONL', r);
-      let tail = "";
-      const data = (r.data = []);
-      let lineNumber = 0;
-      for (let i = 0; i < 1e5; i++) {
-        const { done, value } = await r.reader.read();
-        tail += value ? utf8Decoder.decode(value) : "";
-        const lines = tail.split(/\n/);
-        // console.log(i, lines.length);
-        for (let j = 0; j < lines.length - 1; j++) {
-          lineNumber++;
-          try {
-            data.push(JSON.parse(lines[j]));
-          } catch (err) {
-            console.log("line: " + lineNumber + " chunk:" + i, lines[j], err);
-          }
-          tail = lines[lines.length - 1];
-        }
-        if (done) {
-          if (tail === "") {
-            break;
-          }
-          try {
-            data.push(JSON.parse(tail));
-          } catch (err) {
-            console.log(i, "tail", err);
-          }
-          break;
-        }
-      }
-      jsonls.push(r);
-    }
-    // console.log(jsonls);
-    return jsonls;
-  };
 
   try {
-    // Get the existing <div> element
-    const divElement = await window.webContents.executeJavaScript(`
-          const div = document.getElementById('${divName}');
-          if (div) {
-            div.innerHTML = '';
-          } else {
-            throw new Error('Element with ID "${divName}" not found');
-          }
-        `);
-
-    // Your existing code to process the VCD file and render the wave visualization
-    // ...
-
-    // Update the <div> element with the wave visualization
-
+    const content = divName;
     //const themeAllMod = new StyleModule(themeAll);
-    //StyleModule.mount(mainWindow, themeAllMod);
-
-    //content.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
-
-    const content = getElement(divName);
-    content.innerHTML = stringify("");
+    //StyleModule.mount(window, themeAllMod);
 
     const mod = await createVCD();
-    const inst = await webVcdParser(mod); // VCD parser instance
-
-    useEffect(() => {
-      const handler = getHandler(content, inst);
-    });
-
-    const vcdFilePath = vcdPath;
-
-    const resp = await fetch("http://localhost:9000/vcdPath");
-    const body = resp.body;
-    const reader = body.getReader();
+    const inst = await webVcdParser(mod);
+    const handler = getHandler(content, inst);
 
     const getPathBaseName = (path) => {
       const p1 = path.split("/");
       const res = p1.pop();
       return res;
     };
-
-    await handler({
-      key: "local",
-      value: vcdPath,
-      format: "raw",
-      baseName: getPathBaseName(vcdPath),
-      url: vcdPath,
-      reader,
-    });
-
-    await window.webContents.executeJavaScript(`
-          const divElement = document.getElementById('${divName}');
-          divElement.innerHTML = \`<div>Wave Visualization</div>\`;
-        `);
   } catch (error) {
     console.error("Error getting wave:", error);
     event.reply("get-wave-error", error.message);

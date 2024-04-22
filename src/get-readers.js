@@ -156,6 +156,6 @@ const getReaders = async (handler, vcdPath) => {
   }
 };
 
-module.exports = getReaders;
+//module.exports = getReaders;
 
 /* eslint-env browser */
