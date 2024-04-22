@@ -457,14 +457,16 @@ function App() {
   };
 
   const openWaveDrom = () => {
-    const divElement = document.getElementById("waveContaine");
-    const divContent = divElement.textContent;
+    // const divElement = document.getElementById("waveContainer");
+    // console.log(divElement);
+    //const divElement = document.getElementById("waveContainer");
+    //console.log(divElement);
     ipcRenderer.send(
       "get-wave",
-      "/Users/varunvvs/Maxima2/src/test/swerv1.vcd",
-      divContent,
+      "Users/farhankhan/Maxima2/src/test/swerv1.vcd",
+      "waveContainer",
     );
-    return "hi";
+    //return "hi";
   };
 
   return (
@@ -636,10 +638,7 @@ function App() {
                     </div>
                   )}
                   {activeTab == 2 && ( //WaveFormVRom()
-                    <WaveDromContainer
-                      divName="waveContainer"
-                      vcdPath="/Users/farhakh/Maxima2/src/test/swerv1.vcd"
-                    />
+                    <div id="waveContainer">{openWaveDrom()}</div>
                   )}
                 </div>
               </div>

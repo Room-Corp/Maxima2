@@ -10,10 +10,12 @@ const createVCD = require("vcd-stream/out/vcd.js");
 const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
 const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
 const getVcd = require("vcd-stream/lib/get-vcd.js");
+const dropZone = require("./drop-zone.js");
 
 const stringify = require("onml/stringify.js");
 
 const { StyleModule } = require("style-mod");
+
 const getReaders = require("./get-readers.js");
 
 const {
@@ -173,6 +175,8 @@ ipcMain.handle("get-code", async (event, filePath) => {
 });
 
 const getHandler = (content, inst) => async (readers) => {
+  console.log("the bookwrom is");
+  console.log(readers);
   const waveql = await getWaveql(readers);
   const listing = await getListing(readers);
   const jsonls = await getJsonls(readers);
@@ -290,36 +294,25 @@ const getJsonls = async (readers) => {
   return jsonls;
 };
 
-ipcMain.on("get-wave", async (event, vcdPath, divContent) => {
+ipcMain.on("get-wave", async (event, vcdPath, divElement) => {
   try {
     const window = BrowserWindow.fromWebContents(event.sender);
-
+    const divContent = mainWindow.webContents.executeJavaScript(
+      `document.getElementById('${divElement}')`,
+    );
+    divContent.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
+    console.log("trying");
+    console.log(divContent);
     const mod = await createVCD();
     const inst = await webVcdParser(mod);
     const handler = getHandler(divContent, inst);
+    await getReaders(handler, vcdPath);
 
     const getPathBaseName = (path) => {
       const p1 = path.split("/");
       const res = p1.pop();
       return res;
     };
-
-    const vcdFileContent = await fs.promises.readFile(vcdPath, "utf-8");
-    const vcdFileBlob = new Blob([vcdFileContent], { type: "text/plain" });
-    const vcdFileUrl = URL.createObjectURL(vcdFileBlob);
-
-    const resp = await fetch(vcdFileUrl);
-    const body = await resp.body;
-    const reader = body.getReader();
-
-    await handler({
-      key: "local",
-      value: vcdPath,
-      format: "raw",
-      baseName: getPathBaseName(vcdPath),
-      url: vcdPath,
-      reader,
-    });
   } catch (error) {
     console.error("Error getting wave:", error);
     event.reply("get-wave-error", error.message);

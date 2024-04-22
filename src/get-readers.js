@@ -1,4 +1,4 @@
-"use strict";
+const fs = require("fs");
 
 const getExt = (value) => {
   const parts = value.split(".");
@@ -47,13 +47,24 @@ const urlZip = {
   zmakerchip: "https://makerchip.com",
   zlocal: ".",
 };
+async function readFileAsync(filePath) {
+  try {
+    var buffer = fs.readFileSync("src/test/swerv1.vcd");
+    console.log(buffer);
+    return buffer.toString();
+  } catch (error) {
+    console.error("Buddy there was an error Error reading file:", error);
+    console.log(filePath);
+    throw error;
+  }
+}
 
 const getReaders = async (handler, vcdPath) => {
   const res = [];
   if (typeof vcdPath === "string") {
-    const resp = await fetch(vcdPath);
-    const body = await resp.body;
-    const reader = body.getReader();
+    const resp = readFileAsync(vcdPath);
+    // const body = await resp.body;
+    const reader = resp;
     res.push({
       key: "local",
       value: vcdPath,
@@ -75,16 +86,16 @@ const getReaders = async (handler, vcdPath) => {
         format = "raw";
         ext = getExt(value);
         url = urlRaw[key] + "/" + value;
-        const resp = await fetch(url);
-        const body = await resp.body;
-        reader = body.getReader();
+        const resp = await readFileAsync(url);
+        //const body = await resp.body;
+        reader = resp;
       } else if (urlZip[key]) {
         format = "zip";
         ext = getExt(value);
         url = urlZip[key] + "/" + value;
-        const resp = await fetch(url);
-        const body = await resp.body;
-        reader = body.getReader();
+        const resp = await readFileAsync(url);
+        //const body = await resp.body;
+        reader = resp;
         // TODO unpack stream
       } else {
         format = "arg";
@@ -156,6 +167,6 @@ const getReaders = async (handler, vcdPath) => {
   }
 };
 
-//module.exports = getReaders;
+module.exports = getReaders;
 
 /* eslint-env browser */
