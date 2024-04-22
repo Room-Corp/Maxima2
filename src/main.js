@@ -290,34 +290,36 @@ const getJsonls = async (readers) => {
   return jsonls;
 };
 
-ipcMain.on("get-wave", async (event, vcdPath, divName) => {
-  const window = BrowserWindow.fromWebContents(event.sender);
-
-  const getHandler = (content, inst) => async (readers) => {
-    const waveql = await getWaveql(readers);
-    const listing = await getListing(readers);
-    const jsonls = await getJsonls(readers);
-    console.log(jsonls);
-    const timeOpt = readers.find((row) => row.key === "time");
-
-    await getVcd(readers, content, inst);
-    console.log("getVcd");
-  };
-
+ipcMain.on("get-wave", async (event, vcdPath, divContent) => {
   try {
-    const content = divName;
-    //const themeAllMod = new StyleModule(themeAll);
-    //StyleModule.mount(window, themeAllMod);
+    const window = BrowserWindow.fromWebContents(event.sender);
 
     const mod = await createVCD();
     const inst = await webVcdParser(mod);
-    const handler = getHandler(content, inst);
+    const handler = getHandler(divContent, inst);
 
     const getPathBaseName = (path) => {
       const p1 = path.split("/");
       const res = p1.pop();
       return res;
     };
+
+    const vcdFileContent = await fs.promises.readFile(vcdPath, "utf-8");
+    const vcdFileBlob = new Blob([vcdFileContent], { type: "text/plain" });
+    const vcdFileUrl = URL.createObjectURL(vcdFileBlob);
+
+    const resp = await fetch(vcdFileUrl);
+    const body = await resp.body;
+    const reader = body.getReader();
+
+    await handler({
+      key: "local",
+      value: vcdPath,
+      format: "raw",
+      baseName: getPathBaseName(vcdPath),
+      url: vcdPath,
+      reader,
+    });
   } catch (error) {
     console.error("Error getting wave:", error);
     event.reply("get-wave-error", error.message);
