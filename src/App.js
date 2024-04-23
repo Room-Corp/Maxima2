@@ -20,7 +20,6 @@ import openIcon from "./icons/openfile.png";
 import verilogIcon from "./icons/verilog.png";
 import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
-import WaveDromContainer from "./vcdRomContainer.js";
 
 //import { VCDrom } from "vcdrom";
 //import Wave2 from "./vcdRomWave.js";
@@ -74,6 +73,7 @@ function App() {
   const [openTabs, setOpenTab] = useState([]);
   const [openFiles, setOpenFile] = useState([]);
   const [activeFile, setActiveFile] = useState(-1);
+
 
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 

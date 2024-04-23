@@ -302,17 +302,11 @@ ipcMain.on("get-wave", async (event, vcdPath, divElement) => {
     );
     divContent.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
     console.log("trying");
-    console.log(divContent);
+    //console.log(divContent);
     const mod = await createVCD();
     const inst = await webVcdParser(mod);
     const handler = getHandler(divContent, inst);
     await getReaders(handler, vcdPath);
-
-    const getPathBaseName = (path) => {
-      const p1 = path.split("/");
-      const res = p1.pop();
-      return res;
-    };
   } catch (error) {
     console.error("Error getting wave:", error);
     event.reply("get-wave-error", error.message);
