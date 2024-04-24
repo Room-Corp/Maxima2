@@ -74,17 +74,22 @@ function App() {
   const [openFiles, setOpenFile] = useState([]);
   const [activeFile, setActiveFile] = useState(-1);
 
+  const [folderPath, setFolderPath] = useState([]);
+
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);
   const openWaveForm = async () => {
     console.log("file has bene found");
+
+    const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
+    // ipcRenderer.send("modify-div", "sideBary");
     // const fileContents = await readFileContents("./test/swerv1.vcd");
 
     // switch this to work with relative paths
     const invokeReturn = await ipcRenderer.invoke(
       "get-code",
-      "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
+      "/Users/farhankhan/Maxima2/src/test/example.vcd",
     );
     console.log(invokeReturn);
     console.log("filedone");
@@ -252,6 +257,7 @@ function App() {
     console.log(folder);
     const filesAndFolders = await ipcRenderer.invoke("get-directory", folder);
     setFiles(filesAndFolders);
+    setFolderPath(folder);
   };
 
   const saveFile = () => {
@@ -447,6 +453,9 @@ function App() {
     if (index == 1) {
       openWaveForm();
     }
+    if (index == 2) {
+      openWaveDrom();
+    }
     setActiveTab(index);
   };
 
@@ -460,16 +469,17 @@ function App() {
     // console.log(divElement);
     //const divElement = document.getElementById("waveContainer");
     //console.log(divElement);
+
     ipcRenderer.send(
       "get-wave",
-      "Users/farhankhan/Maxima2/src/test/swerv1.vcd",
+      "Users/farhankhan/Maxima2/src/test/example.vcd",
       "waveContainer",
     );
     //return "hi";
   };
 
   return (
-    <div style={styles.container}>
+    <div id="container" style={styles.container}>
       <div
         style={{
           display: "flex",
@@ -519,7 +529,7 @@ function App() {
 
       <PanelGroup direction="horizontal">
         <Panel minSize={5} defaultSize={10}>
-          <div style={styles.sideBar}>
+          <div id="sideBary" style={styles.sideBar}>
             <MyList items={files} />
           </div>
         </Panel>
@@ -637,7 +647,14 @@ function App() {
                     </div>
                   )}
                   {activeTab == 2 && ( //WaveFormVRom()
-                    <div id="waveContainer">{openWaveDrom()}</div>
+                    <div
+                      style={{
+                        backgroundColor: "blue",
+                        height: "200px",
+                        width: "200px",
+                      }}
+                      id="waveContainer"
+                    ></div>
                   )}
                 </div>
               </div>

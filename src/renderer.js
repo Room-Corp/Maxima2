@@ -26,7 +26,6 @@
  * ```
  */
 
-
 // Create and attach xtermjs terminal on DOM
 // const terminal = new Terminal();
 // terminal.open(document.getElementById("terminal-container"));
@@ -43,8 +42,12 @@
 import "./index.css";
 import "./index.js";
 
-
-
 console.log(
-  '👋 This message is being logged by "renderer.js", included via webpack'
-);;
+  '👋 This message is being logged by "renderer.js", included via webpack',
+);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const divElement = document.getElementById("container");
+  console.log("Wave container element:", divElement);
+  // You can perform operations on the divElement here
+});

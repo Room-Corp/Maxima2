@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs").promises;
 
 const getExt = (value) => {
   const parts = value.split(".");
@@ -13,7 +13,6 @@ const getPathBaseName = (path) => {
 
 const handleFiles = (el, handler) => async () => {
   const items = el.files;
-  // console.log(items);
   if (items.length === 0) {
     return;
   }
@@ -30,7 +29,6 @@ const handleFiles = (el, handler) => async () => {
   await handler(readers);
 };
 
-// 'https://gitlab.com', CORS issue
 const urlRaw = {
   github: "https://raw.githubusercontent.com",
   gist: "https://gist.githubusercontent.com",
@@ -39,6 +37,7 @@ const urlRaw = {
   makerchip: "https://makerchip.com",
   local: ".",
 };
+
 const urlZip = {
   zgithub: "https://raw.githubusercontent.com",
   zgist: "https://gist.githubusercontent.com",
@@ -47,14 +46,13 @@ const urlZip = {
   zmakerchip: "https://makerchip.com",
   zlocal: ".",
 };
+
 async function readFileAsync(filePath) {
   try {
-    var buffer = fs.readFileSync("src/test/swerv1.vcd");
-    console.log(buffer);
+    const buffer = await fs.readFile(filePath);
     return buffer.toString();
   } catch (error) {
-    console.error("Buddy there was an error Error reading file:", error);
-    console.log(filePath);
+    console.error("Error reading file:", error);
     throw error;
   }
 }
@@ -63,7 +61,6 @@ const getReaders = async (handler, vcdPath) => {
   const res = [];
   if (typeof vcdPath === "string") {
     const resp = await readFileAsync(vcdPath);
-    // const body = await resp.body;
     const reader = resp;
     res.push({
       key: "local",
@@ -73,7 +70,6 @@ const getReaders = async (handler, vcdPath) => {
       url: vcdPath,
       reader,
     });
-    // return;
   } else if (typeof vcdPath === "function") {
     console.log("vcdPath is function");
     const context = vcdPath(handler);
@@ -87,16 +83,13 @@ const getReaders = async (handler, vcdPath) => {
         ext = getExt(value);
         url = urlRaw[key] + "/" + value;
         const resp = await readFileAsync(url);
-        //const body = await resp.body;
         reader = resp;
       } else if (urlZip[key]) {
         format = "zip";
         ext = getExt(value);
         url = urlZip[key] + "/" + value;
         const resp = await readFileAsync(url);
-        //const body = await resp.body;
         reader = resp;
-        // TODO unpack stream
       } else {
         format = "arg";
       }
@@ -137,10 +130,8 @@ const getReaders = async (handler, vcdPath) => {
         ev.preventDefault();
         ev.stopPropagation();
         if (ev.dataTransfer.items) {
-          // console.log('Use DataTransferItemList interface to access the file(s)');
           await handleFiles({ files: ev.dataTransfer.items }, handler)();
         } else {
-          // console.log('Use DataTransfer interface to access the file(s)');
           await handleFiles(ev.dataTransfer, handler)();
         }
       },
@@ -168,5 +159,3 @@ const getReaders = async (handler, vcdPath) => {
 };
 
 module.exports = getReaders;
-
-/* eslint-env browser */

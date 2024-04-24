@@ -43,6 +43,15 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
+ipcMain.on("modify-div", (event, divId) => {
+  // console.log("print working");
+  // const webContents = event.sender;
+  // webContents.executeJavaScript(`
+  //   const divElement = document.getElementById('${divId}');
+  //   console.log("Hello!");
+  //   divElement.style.backgroundColor = "red";
+  // `);
+});
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -293,24 +302,123 @@ const getJsonls = async (readers) => {
   // console.log(jsonls);
   return jsonls;
 };
-
-ipcMain.on("get-wave", async (event, vcdPath, divElement) => {
+ipcMain.on("get-wave", async (event, vcdPath, divId) => {
   try {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    const divContent = mainWindow.webContents.executeJavaScript(
-      `document.getElementById('${divElement}')`,
-    );
-    divContent.innerHTML = stringify(dropZone({ width: 2048, height: 2048 }));
-    console.log("trying");
-    //console.log(divContent);
+    const webContents = event.sender;
     const mod = await createVCD();
     const inst = await webVcdParser(mod);
-    const handler = getHandler(divContent, inst);
-    await getReaders(handler, vcdPath);
+    const handler = getHandler(null, inst);
+
+    await webContents.executeJavaScript(`
+        console.log("Hello!");
+        const iLoveMen = document.getElementById('${divId}');
+        iLoveMen.innerHTML = '${stringify(dropZone({ width: 2048, height: 2048 }))}';
+
+        (${getReaders.toString()})(${handler.toString()}, '${vcdPath}')
+          .then(() => {
+            console.log("getReaders completed");
+          })
+          .catch((error) => {
+            console.error("Error in getReaders:", error);
+          });
+      `);
+    console.log("trying");
   } catch (error) {
     console.error("Error getting wave:", error);
-    event.reply("get-wave-error", error.message);
+    return error.message;
   }
+});
+
+function getTestbenchFilename(files, currentFileName) {
+  // Regular expression to match "testbench", "tb", and the current file name
+  const regex = new RegExp(`^${currentFileName}.*(testbench|tb)`, "i"); // "i" flag for case-insensitive matching
+
+  // Iterate over each file name
+  for (let i = 0; i < files.length; i++) {
+    console.log(files[i].name);
+    // Check if the current file name matches the regular expression
+    if (regex.test(files[i].name)) {
+      return files[i].name; // Return the matching file name
+    }
+  }
+
+  // Return null if none of the file names contain "testbench", "tb", or the current file name
+  return "not found";
+}
+
+//currently we compile the files a very specialized way
+ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
+  const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
+  const pt = pty.spawn(shell, [], {
+    name: "vcd-generator",
+    cols: col,
+    rows: row,
+    cwd: folderPath,
+    env: process.env,
+  });
+
+  console.log(filePath);
+
+  // this will allow us to run different scripts, build different waveforms
+  const extension = filePath.split(".").pop();
+  const slashIdx = filePath.lastIndexOf("/") + 1;
+
+  // Find the index of the dot to get the end index
+  const dotIdx = filePath.lastIndexOf(".");
+
+  // Extract the name
+  let name = filePath.substring(slashIdx, dotIdx);
+  console.log("file name is:" + name);
+  const files = await readdirS(folderPath);
+
+  let testBenchFile = getTestbenchFilename(files, name);
+  pt.onData((data) => {
+    console.log("data is " + data);
+  });
+  console.log(extension);
+
+  //currently supports sv
+
+  //pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  //pt.write("vvp example.out \r");
+  // console.log(
+  //   "iverilog -g2012 -o " +
+  //     name +
+  //     ".out " +
+  //     testBenchFile +
+  //     " " +
+  //     name +
+  //     "." +
+  //     extension +
+  //     " \r",
+  // );
+  // pt.write(
+  //   "iverilog -g2012 -o " +
+  //     name +
+  //     ".out " +
+  //     testBenchFile +
+  //     " " +
+  //     name +
+  //     "." +
+  //     extension +
+  //     " \r",
+  // );
+  // pt.write("vvp " + name + ".out" + " \r");
+
+  var testbenchCode = fs
+    .readFileSync(folderPath + "/" + testBenchFile)
+    .toString();
+  const dumpfileStatement = testbenchCode.match(/\$dumpfile\("(.+)"\)/);
+  const dumpFileName = dumpfileStatement ? dumpfileStatement[1] : null;
+
+  //return;
+  // get directory, then check for test bench
+
+  //
+
+  //});
+
+  return folderPath + "/" + dumpFileName;
 });
 
 app.on("window-all-closed", () => {
