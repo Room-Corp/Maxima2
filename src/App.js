@@ -74,7 +74,6 @@ function App() {
   const [openFiles, setOpenFile] = useState([]);
   const [activeFile, setActiveFile] = useState(-1);
 
-
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);

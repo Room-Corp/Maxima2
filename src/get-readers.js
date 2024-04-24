@@ -62,7 +62,7 @@ async function readFileAsync(filePath) {
 const getReaders = async (handler, vcdPath) => {
   const res = [];
   if (typeof vcdPath === "string") {
-    const resp = readFileAsync(vcdPath);
+    const resp = await readFileAsync(vcdPath);
     // const body = await resp.body;
     const reader = resp;
     res.push({
