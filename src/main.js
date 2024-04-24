@@ -18,6 +18,8 @@ const { StyleModule } = require("style-mod");
 
 const getReaders = require("./get-readers.js");
 
+const child_process = require("child_process").execFile;
+
 const {
   domContainer,
   pluginRenderValues,
@@ -311,6 +313,24 @@ ipcMain.on("get-wave", async (event, vcdPath, divElement) => {
     console.error("Error getting wave:", error);
     event.reply("get-wave-error", error.message);
   }
+});
+
+ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
+  const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
+  const pt = pty.spawn(shell, [], {
+    name: "xterm-color",
+    cols: col,
+    rows: row,
+    cwd: folderPath,
+    env: process.env,
+  });
+
+  pt.write("iverilog -o sim " + filePath + " && vvp sim \r");
+  pt.onData((data) => {
+    console.log("data is " + data);
+  });
+
+  return folderPath + "/" + "half_adder.vcd";
 });
 
 app.on("window-all-closed", () => {

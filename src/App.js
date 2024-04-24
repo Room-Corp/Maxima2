@@ -74,6 +74,8 @@ function App() {
   const [openFiles, setOpenFile] = useState([]);
   const [activeFile, setActiveFile] = useState(-1);
 
+  const [folderPath, setFolderPath] = useState([]);
+
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   const folderInput = useRef(null);
@@ -82,10 +84,11 @@ function App() {
     // const fileContents = await readFileContents("./test/swerv1.vcd");
 
     // switch this to work with relative paths
-    const invokeReturn = await ipcRenderer.invoke(
-      "get-code",
-      "/Users/farhankhan/Maxima2/src/test/swerv1.vcd",
-    );
+    const invRet = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
+    console.log("filepathinvret " + filePath);
+    console.log("folderpathinvret " + folderPath);
+    console.log("invret" + invRet);
+    const invokeReturn = await ipcRenderer.invoke("get-code", invRet);
     console.log(invokeReturn);
     console.log("filedone");
     const parser = new VcdParser();
@@ -250,6 +253,8 @@ function App() {
       folder = folderPath.substring(0, dotIdx);
     }
     console.log(folder);
+    // set state variable here
+    setFolderPath(folder);
     const filesAndFolders = await ipcRenderer.invoke("get-directory", folder);
     setFiles(filesAndFolders);
   };
