@@ -15,4 +15,10 @@ module.exports = {
     asyncWebAssembly: true,
     syncWebAssembly: true,
   },
+  resolve: {
+    fallback: {
+      fs: require.resolve("fs-extra"),
+      path: require.resolve("path-browserify"),
+    },
+  },
 };

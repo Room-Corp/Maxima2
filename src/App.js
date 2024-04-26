@@ -21,6 +21,8 @@ import verilogIcon from "./icons/verilog.png";
 import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
 
+import VCDromComponent from "./VcdWaveForm.js";
+
 //import { VCDrom } from "vcdrom";
 //import Wave2 from "./vcdRomWave.js";
 
@@ -454,7 +456,7 @@ function App() {
       openWaveForm();
     }
     if (index == 2) {
-      openWaveDrom();
+      // openWaveDrom();
     }
     setActiveTab(index);
   };
@@ -649,12 +651,18 @@ function App() {
                   {activeTab == 2 && ( //WaveFormVRom()
                     <div
                       style={{
-                        backgroundColor: "blue",
-                        height: "200px",
-                        width: "200px",
+                        backgroundColor: "transparent",
+                        height: "400px",
+                        width: "1000px",
                       }}
                       id="waveContainer"
-                    ></div>
+                    >
+                      <VCDromComponent
+                        vcdPath={
+                          "/Users/farhankhan/Maxima2/src/test/example.vcd"
+                        }
+                      />
+                    </div>
                   )}
                 </div>
               </div>

@@ -1,4 +1,4 @@
-const fs = require("fs").promises;
+const fs = require("fs");
 
 const getExt = (value) => {
   const parts = value.split(".");
@@ -9,6 +9,16 @@ const getPathBaseName = (path) => {
   const p1 = path.split("/");
   const res = p1.pop();
   return res;
+};
+
+const readFileAsync = async (filePath) => {
+  try {
+    const buffer = await fs.readFile(filePath);
+    return buffer.toString();
+  } catch (error) {
+    console.error("Error reading file:", error);
+    throw error;
+  }
 };
 
 const handleFiles = (el, handler) => async () => {
@@ -46,16 +56,6 @@ const urlZip = {
   zmakerchip: "https://makerchip.com",
   zlocal: ".",
 };
-
-async function readFileAsync(filePath) {
-  try {
-    const buffer = await fs.readFile(filePath);
-    return buffer.toString();
-  } catch (error) {
-    console.error("Error reading file:", error);
-    throw error;
-  }
-}
 
 const getReaders = async (handler, vcdPath) => {
   const res = [];
@@ -141,6 +141,7 @@ const getReaders = async (handler, vcdPath) => {
     window.addEventListener(
       "dragover",
       (ev) => {
+        console.log("this code is working");
         ev.preventDefault();
         ev.stopPropagation();
       },
