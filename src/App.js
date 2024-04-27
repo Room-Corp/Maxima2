@@ -659,7 +659,7 @@ function App() {
                     >
                       <VCDromComponent
                         vcdPath={
-                          "/Users/farhankhan/Maxima2/src/test/example.vcd"
+                          "/Users/farhankhan/Maxima2/src/test/swerv1.vcd"
                         }
                       />
                     </div>

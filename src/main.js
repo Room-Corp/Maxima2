@@ -185,146 +185,6 @@ ipcMain.handle("get-code", async (event, filePath) => {
   }
 });
 
-const getHandler = (content, inst) => async (readers) => {
-  console.log("the bookwrom is");
-  console.log(readers);
-  const waveql = await getWaveql(readers);
-  const listing = await getListing(readers);
-  const jsonls = await getJsonls(readers);
-  const timeOpt = readers.find((row) => row.key === "time");
-
-  vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
-    content.innerHTML = "";
-    deso.waveql = waveql;
-    deso.listing = listing;
-    deso.timeOpt = timeOpt;
-    deso.jsonls = jsonls;
-
-    const container = domContainer({
-      elemento: mountTree.defaultElemento,
-      layers: mountTree.defaultLayers,
-      renderPlugins: [
-        pluginRenderTimeGrid,
-        pluginRenderValues,
-        pluginLocalStore,
-      ],
-      pluginRightPanel: (elo) => {
-        elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
-      },
-    });
-
-    content.appendChild(container.pstate.container);
-    container.start(deso);
-
-    container.elo.menu.innerHTML = stringify(
-      helpPanel.mlIcon("https://github.com/wavedrom/vcdrom/blob/trunk/help.md"),
-    );
-    container.elo.menu.addEventListener("click", () =>
-      helpPanel.toggle(container.pstate),
-    );
-
-    deso.hasHistory = true;
-    deso.isRO = true;
-    deso.updater = (/* str */) => {
-      console.log("updater");
-    };
-
-    const cmState = createCodeMirrorState(deso, container.pstate);
-
-    const cm = mountCodeMirror6(
-      cmState,
-      container.elo.waveqlPanel,
-      deso,
-      container.pstate,
-    );
-
-    cm.view.dispatch({ changes: { from: 0, insert: " " } });
-    cm.view.dispatch({ changes: { from: 0, to: 1, insert: "" } });
-
-    container.elo.container.addEventListener(
-      "keydown",
-      genKeyHandler.genKeyHandler(
-        content,
-        container.pstate,
-        deso,
-        cm,
-        keyBindo,
-      ),
-    );
-    container.elo.container.addEventListener(
-      "wheel",
-      genOnWheel(content, container.pstate, deso, cm, keyBindo),
-    );
-    // console.log(cm);
-    cm.view.focus();
-  });
-
-  await getVcd(readers, content, inst);
-  console.log("getVcd");
-};
-const getJsonls = async (readers) => {
-  const jsonls = [];
-  const utf8Decoder = new TextDecoder("utf-8");
-  for (const r of readers) {
-    if (r.ext !== "jsonl" && r.ext !== "jsonl") {
-      continue;
-    }
-    // console.log('JSONL', r);
-    let tail = "";
-    const data = (r.data = []);
-    let lineNumber = 0;
-    for (let i = 0; i < 1e5; i++) {
-      const { done, value } = await r.reader.read();
-      tail += value ? utf8Decoder.decode(value) : "";
-      const lines = tail.split(/\n/);
-      // console.log(i, lines.length);
-      for (let j = 0; j < lines.length - 1; j++) {
-        lineNumber++;
-        try {
-          data.push(JSON.parse(lines[j]));
-        } catch (err) {
-          console.log("line: " + lineNumber + " chunk:" + i, lines[j], err);
-        }
-        tail = lines[lines.length - 1];
-      }
-      if (done) {
-        if (tail === "") {
-          break;
-        }
-        try {
-          data.push(JSON.parse(tail));
-        } catch (err) {
-          console.log(i, "tail", err);
-        }
-        break;
-      }
-    }
-    jsonls.push(r);
-  }
-  // console.log(jsonls);
-  return jsonls;
-};
-
-ipcMain.on("get-wave", async (event, vcdPath, divId) => {
-  try {
-    const webContents = event.sender;
-    const mod = await createVCD();
-    const inst = await webVcdParser(mod);
-
-    await webContents.executeJavaScript(`
-      const content = document.getElementById('${divId}');
-      const themeAllMod = new StyleModule(${JSON.stringify(themeAll)});
-      StyleModule.mount(document, themeAllMod);
-      content.innerHTML = ${JSON.stringify(stringify(dropZone({ width: 2048, height: 2048 })))};
-      const handler = (${getHandler.toString()})(content, ${JSON.stringify(inst)});
-      (${getReaders.toString()})(handler, '${vcdPath}');
-    `);
-  } catch (error) {
-    console.error("Error getting wave:", error);
-    return error.message;
-  }
-});
-
 function getTestbenchFilename(files, currentFileName) {
   // Regular expression to match "testbench", "tb", and the current file name
   const regex = new RegExp(`^${currentFileName}.*(testbench|tb)`, "i"); // "i" flag for case-insensitive matching
@@ -425,11 +285,16 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
   const webContents = event.sender;
+  const mod = await createVCD();
+  const inst = await webVcdParser(mod);
+  console.log(inst);
   // i think these methods need to go in execute havascruot
 
   //console.log(inst);
   try {
     await webContents.executeJavaScript(`
+
+
 
       const { StyleModule } = require('style-mod');
       const fs = require("fs");
@@ -459,10 +324,7 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          }
        };
 
-       const getExt = (value) => {
-         const parts = value.split(".");
-         return parts[parts.length - 1];
-       };
+
 
        const getPathBaseName = (path) => {
          const p1 = path.split("/");
@@ -679,14 +541,95 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          });
        };
      };
+     const getHandler = (content, inst) => async (readers) => {
+     console.log(content);
+     console.log(inst);
+     console.log("was passed");
+       const waveql = await getWaveql(readers);
+       const listing = await getListing(readers);
+       const jsonls = await getJsonls(readers);
+       const timeOpt = readers.find((row) => row.key === "time");
+
+       vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
+         content.innerHTML = "";
+         deso.waveql = waveql;
+         deso.listing = listing;
+         deso.timeOpt = timeOpt;
+         deso.jsonls = jsonls;
+
+         const container = domContainer({
+           elemento: mountTree.defaultElemento,
+           layers: mountTree.defaultLayers,
+           renderPlugins: [
+             pluginRenderTimeGrid,
+             pluginRenderValues,
+             pluginLocalStore,
+           ],
+           pluginRightPanel: (elo) => {
+             elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
+           },
+         });
+
+         content.appendChild(container.pstate.container);
+         container.start(deso);
+
+         container.elo.menu.innerHTML = stringify(
+           helpPanel.mlIcon("https://github.com/wavedrom/vcdrom/blob/trunk/help.md"),
+         );
+         container.elo.menu.addEventListener("click", () =>
+           helpPanel.toggle(container.pstate),
+         );
+
+         deso.hasHistory = true;
+         deso.isRO = true;
+         deso.updater = (/* str */) => {
+           console.log("updater");
+         };
+
+         const cmState = createCodeMirrorState(deso, container.pstate);
+
+         const cm = mountCodeMirror6(
+           cmState,
+           container.elo.waveqlPanel,
+           deso,
+           container.pstate,
+         );
+
+         cm.view.dispatch({ changes: { from: 0, insert: " " } });
+         cm.view.dispatch({ changes: { from: 0, to: 1, insert: "" } });
+
+         container.elo.container.addEventListener(
+           "keydown",
+           genKeyHandler.genKeyHandler(
+             content,
+             container.pstate,
+             deso,
+             cm,
+             keyBindo,
+           ),
+         );
+         container.elo.container.addEventListener(
+           "wheel",
+           genOnWheel(content, container.pstate, deso, cm, keyBindo),
+         );
+         // console.log(cm);
+         cm.view.focus();
+       });
+
+       await getVcd(readers, content, inst);
+       console.log("getVcd");
+     };
 
      const getVcd = async (readers, content, inst) => {
-       const maxChunkLength = 1 << 17; // Number.MAX_SAFE_INTEGER; // 5e6; // 300000; // 1 << 23;
+     console.log(inst);
+     console.log("inst is above");
 
+       const maxChunkLength = 1 << 17; // Number.MAX_SAFE_INTEGER; // 5e6; // 300000; // 1 << 23;
+       console.log(readers);
+       console.log(readers.find(reader => reader.ext === 'vcd'));
 
        const r = readers.find(reader => reader.ext === 'vcd');
        if (r) {
-         // console.log('VCD', r);
          document.title = r.baseName;
          content.innerHTML = '<div class="wd-progress">LOADING...</div>';
          let total = 0;
@@ -715,402 +658,155 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
                inst.end(value1);
                break outerLoop;
              }
-             inst.write(value1);
+            inst.write(value1);
+            console.log("wrote");
            }
          }
        }
      };
-
-     const stream = require('stream');
-     const EventEmitter = require('events').EventEmitter;
-
-     const dotProp = require('dot-prop');
-
-     const commandHandler = require('./command-handler.js');
-     const webVcdParser = (mod) => {
-     // function _waitForStart(mod) {
-     //   return new Promise((resolve)=>{
-     //     mod.addOnPostRun(resolve);
-     //   });
-     // }
-
-     // function u8ToBn(u8) {
-     //   let str = '';
-     //   for (let i = 0; i < u8.length; i++) {
-     //     const val = u8[i];
-     //     str = val.toString(16) + str;
-     //     if (val < 16) {
-     //       str = '0' + str;
-     //     }
-     //   }
-     //   return BigInt('0x' + str);
-     // }
-
-     function h8ToBn(HEAPU8, start, len) {
-       if (len === 0) {
-         return 0n;
-       }
-       let str = '';
-       const fin = start + len * 8;
-       for (let i = start; i < fin; i++) {
-         const val = HEAPU8[i];
-         str = val.toString(16) + str;
-         if (val < 16) {
-           str = '0' + str;
-         }
-       }
-       return BigInt('0x' + str);
-     }
-
-     // let startCalled = 0;
-
-     const bindCWrap = (c, wasm) => {
-       const w = wasm.cwrap;
-       c.execute    = w('execute',    'number', ['number', 'number', 'number', 'number', 'number', 'array', 'number']);
-       c.init       = w('init',       'number', ['number', 'number', 'number', 'number']);
-       c.getTime    = w('getTime',    'number', ['number']);
-       c.setTrigger = w('setTrigger', 'number', ['number', 'string']);
+     const getExt = (value) => {
+       const parts = value.split(".");
+       return parts[parts.length - 1];
      };
 
-     const getWrapper = wasm => {
-       // console.log(wasm);
 
-       const c = {};
+     const urlRaw = {
+       github: "https://raw.githubusercontent.com",
+       gist: "https://gist.githubusercontent.com",
+       bitbucket: "https://bitbucket.org",
+       gitlab: "https://gl.githack.com",
+       makerchip: "https://makerchip.com",
+       local: ".",
+     };
 
-       let bindCallback;
+     const urlZip = {
+       zgithub: "https://raw.githubusercontent.com",
+       zgist: "https://gist.githubusercontent.com",
+       zbitbucket: "https://bitbucket.org",
+       zgitlab: "https://gl.githack.com",
+       zmakerchip: "https://makerchip.com",
+       zlocal: ".",
+     };
 
-
-       const start = async() => {
-         // if( !startCalled ) {
-         //   await _waitForStart(wasm);
-         //   startCalled++;
-         // }
-         // console.log('s1');
-         bindCWrap(c, wasm);
-         // console.log('s2');
-         bindCallback();
-         // console.log('s3');
-       };
-
-       // gets a string from a c heap pointer and length
-       const getString = (name, len) => {
-
-         // const view = wasm.HEAPU8.subarray(name, name+len);
-         // let string = '';
-         // for (let i = 0; i < len; i++) {
-         //   string += String.fromCharCode(view[i]);
-         // }
-         // return string;
-
-         let string = '';
-         const end = name + len;
-         for (let i = name; i < end; i++) {
-           string += String.fromCharCode(wasm.HEAPU8[i]);
+     const getReaders = async (handler, vcdPath) => {
+     console.log(vcdPath);
+     console.log("was passed 2");
+       const res = [];
+       if (typeof vcdPath === "string") {
+         const fileContent = await readFileAsync(vcdPath);
+         let reader = {
+           data: fileContent,
+           position: 0,
+           read: () => {
+             const chunk = reader.data.slice(reader.position, reader.position + 1024);
+             reader.position += chunk.length;
+             return { value: chunk, done: reader.position >= reader.data.length };
+           }
+         };
+         console.log("this one");
+         const ext = getExt(vcdPath);
+         res.push({
+           key: "local",
+           ext: ext,
+           value: vcdPath,
+           format: "raw",
+           baseName: getPathBaseName(vcdPath),
+           url: vcdPath,
+           reader,
+         });
+       } else if (typeof vcdPath === "function") {
+         console.log("vcdPath is function");
+         const context = vcdPath(handler);
+         console.log(context);
+       } else {
+         const urlSearchParams = new URLSearchParams(window.location.search);
+         for (const [key, value] of urlSearchParams) {
+           let format, ext, url, reader;
+           if (urlRaw[key]) {
+             format = "raw";
+             ext = getExt(value);
+             url = urlRaw[key] + "/" + value;
+             const resp = await readFileAsync(url);
+             reader = resp;
+           } else if (urlZip[key]) {
+             format = "zip";
+             ext = getExt(value);
+             url = urlZip[key] + "/" + value;
+             const resp = await readFileAsync(url);
+             reader = resp;
+           } else {
+             format = "arg";
+           }
+           const baseName = getPathBaseName(value);
+           res.push({ key, value, baseName, format, ext, url, reader });
          }
-         return string;
+       }
 
-       };
+       if (res.length > 0) {
+         await handler(res);
+         return;
+       }
 
-       let boundInfo;
+       const dropZoneEl = document.getElementById("drop-zone");
+       const inputEl = document.getElementById("inputfile");
 
-       let boundSet;
-       let boundGet;
+       if (inputEl && dropZoneEl) {
+         await handleFiles(inputEl, handler)();
+         inputEl.addEventListener("change", handleFiles(inputEl, handler), false);
+         document.addEventListener("keydown", (event) => {
+           if (event.ctrlKey && (event.key === "o" || event.key === "O")) {
+             event.preventDefault();
+             inputEl.click();
+           }
+         });
 
-       let ee = [];
+         dropZoneEl.addEventListener(
+           "click",
+           () => {
+             inputEl.click();
+           },
+           false,
+         );
 
-       let boundEE0;
-       let boundEE1;
-
-       let context = -1;
-
-
-       const onEE1 = (
-         /* const char* */   eventName,
-         /* const size_t */  eventNameLength, // strlen(name)
-         /* const int64_t */ time,
-         /* const int */     cmd,
-         /* const int */     valueWords,
-         /* uint64_t* */     value,
-         /* const int */     maskWords,
-         /* uint64_t* */     mask
-       ) => {
-         const name = getString(eventName, eventNameLength);
-
-         // console.log({name, time, command, valueWords});
-
-
-
-         // const view0 = wasm.HEAPU8.subarray(value, value+(valueWords*8));
-         // const view1 = wasm.HEAPU8.subarray(mask,  mask+(valueWords*8));
-
-         // let bigValue = u8ToBn(view0);
-         // let bigMask = u8ToBn(view1);
-         // let bigValue = 0n;
-
-         // console.log(bigValue.toString(16));
-
-         if (cmd >= 14 && cmd <= 28) {
-           ee[1](name, time, cmd);
-         } else {
-           const bigValue = h8ToBn(wasm.HEAPU8, value, valueWords);
-           const bigMask = h8ToBn(wasm.HEAPU8, mask, maskWords);
-           ee[1](name, time, cmd, bigValue, bigMask);
-         }
-       };
-
-       // wasm.addFunction can't be called until after
-       // start finishes
-       bindCallback = () => {
-         boundSet = wasm.addFunction(function(name, len, type, v0, v1) {
-
-           let prop = getString(name, len);
-           let tmp;
-
-           switch(type) {
-           // set number
-           case 0:
-             boundInfo[prop] = v0;
-
-             break;
-           // set string
-           case 1:
-             boundInfo[prop] = getString(v0, v1);
-
-             break;
-           // set string to path
-           case 2:
-             dotProp.set(boundInfo, prop, getString(v0, v1));
-
-             break;
-           // path to path (any type)
-           case 3:
-             tmp = getString(v0, v1)
-               .split(',')
-               .map(e => dotProp.get(boundInfo, e));
-             if (tmp.length === 1) {
-               dotProp.set(boundInfo, prop, tmp[0]);
-               break;
+         window.addEventListener(
+           "drop",
+           async (ev) => {
+             ev.preventDefault();
+             ev.stopPropagation();
+             if (ev.dataTransfer.items) {
+               await handleFiles({ files: ev.dataTransfer.items }, handler)();
+             } else {
+               await handleFiles(ev.dataTransfer, handler)();
              }
-             dotProp.set(boundInfo, prop, tmp);
-             break;
-           // create empty object at path
-           case 4:
+           },
+           false,
+         );
 
-             dotProp.set(boundInfo, prop, {});
-             break;
-           case 5:
-             commandHandler(boundInfo, v0, prop);
-             break;
-           default: throw new Error();
-           }
+         window.addEventListener(
+           "dragover",
+           (ev) => {
+             console.log("this code is working");
+             ev.preventDefault();
+             ev.stopPropagation();
+           },
+           false,
+         );
 
-
-           // viiiii means returns void, accepts int int int int int
-         }, 'viiiii');
-
-         boundGet = wasm.addFunction(function(name, len) {
-           let prop = getString(name, len);
-           return prop;
-         }, 'iii');
-
-
-         boundEE0 = wasm.addFunction(function(name, len) {
-           ee[0](getString(name, len));
-         }, 'vii');
-
-         boundEE1 = wasm.addFunction(onEE1, 'viijiiiii');
-
-       };
-
-       return {
-         start,
-         c,
-         init: (cb0, cb1, info) => {
-           boundInfo = info;
-           ee[0] = cb0;
-           ee[1] = cb1;
-           context = c.init(boundEE0, boundEE1, boundSet, boundGet);
-           return context;
-         },
-         execute: (ctx, cb0, cb1, info, chunk) => {
-           boundInfo = info;
-           ee[0] = cb0;
-           ee[1] = cb1;
-           return c.execute(ctx, boundEE0, boundEE1, boundSet, boundGet, chunk, chunk.length);
-         },
-         setTrigger: (ctx, triggerString) => {
-           return c.setTrigger(ctx, triggerString);
-         },
-         getTime: (ctx) => {
-           return BigInt(c.getTime(ctx));
-         }
-       };
-
+         window.addEventListener(
+           "dragenter",
+           (ev) => {
+             ev.preventDefault();
+             ev.stopPropagation();
+           },
+           false,
+         );
+       }
      };
 
-     module.exports = async wasm => {
-       const lib = getWrapper(wasm);
-       // console.log('getWrapper', lib);
-       await lib.start();
-       // console.log('vcd wasm srarted');
-       const wires = {kind: 'scope', type: '.', name: '.', body: []};
-       const info = {stack: [wires], wires};
-
-       const s = new stream.Writable();
-
-       // gets called by c with 1 argument, a string
-       const lifemit = s.emit.bind(s);
-
-       const triee = new EventEmitter();
-
-       // gets called by c with 5 arguments
-       // string        eventName
-       // number        state->time
-       // int           command
-       // int           state->value
-       // int           state->mask
-
-       const triemit = triee.emit.bind(triee);
-       let triemit2 = triemit;
-
-       const cxt = lib.init(lifemit, triemit, info);
-
-       s._write = function (chunk, encoding, callback) {
-         // console.log('chunk:', chunk.length);
-         const err = lib.execute(cxt, lifemit, triemit2, info, chunk);
-         if (err) {
-           console.log(err);
-         }
-         // console.log(util.inspect(info, {showHidden: true, depth : null, colorize: true}));
-         // console.log(info.stack[0].top);
-         // console.log(info.stack[1]);
-         // console.log(info.stack[0].top == info.stack[1]);
-         callback();
-       };
-
-       s.change = {
-         on: (id, fn) => {
-           triemit2 = triemit;
-           triee.on(id, fn);
-           const triggerString = triee.eventNames().join(' ') + '  ';
-           // console.log(id, Buffer.from(triggerString));
-           lib.setTrigger(cxt, triggerString);
-         },
-         any: fn => {
-           triemit2 = fn;
-           lib.setTrigger(cxt, '\0');
-         }
-       };
-
-       s.info = info;
-
-       s.getTime = () => lib.getTime(cxt);
-
-       s.start = lib.start;
-
-       return s;
-     };
-     };
-
-
-     function createVCD() {
-       var Module = typeof createVCD != "undefined" ? createVCD : {};
-       var readyPromiseResolve, readyPromiseReject;
-       Module["ready"] = new Promise(function(resolve, reject) {
-         readyPromiseResolve = resolve;
-         readyPromiseReject = reject;
-       });
-       var moduleOverrides = Object.assign({}, Module);
-       var arguments_ = [];
-       var thisProgram = "./this.program";
-       var quit_ = (status, toThrow) => {
-         throw toThrow;
-       };
-       var ENVIRONMENT_IS_WEB = typeof window == "object";
-       var ENVIRONMENT_IS_WORKER = typeof importScripts == "function";
-       var ENVIRONMENT_IS_NODE = typeof process == "object" && typeof process.versions == "object" && typeof process.versions.node == "string";
-       var scriptDirectory = "";
-       function locateFile(path) {
-         if (Module["locateFile"]) {
-           return Module["locateFile"](path, scriptDirectory);
-         }
-         return scriptDirectory + path;
-       }
-       // ... rest of the code ...
-
-       var calledRun;
-       dependenciesFulfilled = function runCaller() {
-         if (!calledRun) run();
-         if (!calledRun) dependenciesFulfilled = runCaller;
-       };
-       function callMain() {
-         var entryFunction = _main;
-         var argc = 0;
-         var argv = 0;
-         try {
-           var ret = entryFunction(argc, argv);
-           exitJS(ret, true);
-           return ret;
-         } catch (e) {
-           return handleException(e);
-         }
-       }
-       function run() {
-         if (runDependencies > 0) {
-           return;
-         }
-         preRun();
-         if (runDependencies > 0) {
-           return;
-         }
-         function doRun() {
-           if (calledRun) return;
-           calledRun = true;
-           Module["calledRun"] = true;
-           if (ABORT) return;
-           initRuntime();
-           preMain();
-           readyPromiseResolve(Module);
-           if (Module["onRuntimeInitialized"]) Module["onRuntimeInitialized"]();
-           if (shouldRunNow) callMain();
-           postRun();
-         }
-         if (Module["setStatus"]) {
-           Module["setStatus"]("Running...");
-           setTimeout(function() {
-             setTimeout(function() {
-               Module["setStatus"]("");
-             }, 1);
-             doRun();
-           }, 1);
-         } else {
-           doRun();
-         }
-       }
-       if (Module["preInit"]) {
-         if (typeof Module["preInit"] == "function")
-           Module["preInit"] = [Module["preInit"]];
-         while (Module["preInit"].length > 0) {
-           Module["preInit"].pop()();
-         }
-       }
-       var shouldRunNow = true;
-       if (Module["noInitialRun"]) shouldRunNow = false;
-
-       if (shouldRunNow) {
-         run();
-         Module["ready"];
-       }
-
-       return Module;
-     }
-
-      const Module = createVCD();
-     // Use the exported functions and properties from the Module object
-      Module._init();
-      Module._execute();
-       console.log(Module);
-       //const inst = await webVcdParser(mod);
+      async function initHandler() {
+      console.log("the path is" + '${vcdPath}');
+      await getReaders(handler, '${vcdPath}');
+    }
 
       const content = document.getElementById('${divId}');
       const themeAllMod = new StyleModule(${JSON.stringify(themeAll)});
@@ -1120,9 +816,19 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
       dropZoneElement.addEventListener("dragover", handleDragOver);
       dropZoneElement.addEventListener("dragenter", handleDragEnter);
       dropZoneElement.addEventListener("drop", handleDrop);
+
+
+      const handler = getHandler(content, '${inst}');
+      console.log("pan-handler");
+      console.log(handler);
+      initHandler();
+
+
+
     `);
     //      const handler = (${getHandler.toString()})(content, ${JSON.stringify(inst)});
     // (${getReaders.toString()})(handler, filePath);
+    //  (${getReaders.toString()})(handler, filePath);
   } catch (error) {
     console.error("Error initializing VCDrom:", error);
     return error.message;
