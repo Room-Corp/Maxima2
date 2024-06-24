@@ -26,7 +26,7 @@ const {
   keyBindo,
   mountTree,
   getElement,
-  getListing,
+  // getListing,
   genKeyHandler,
   genOnWheel,
   themeAll,
@@ -306,7 +306,7 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
         keyBindo,
         mountTree,
         getElement,
-        getListing,
+        //getListing,
         // renderMenu,
         // mountCodeMirror5,
         genKeyHandler,
@@ -324,7 +324,48 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
            throw error;
          }
        };
+       const lister = () => {
+          console.log("lister mister");
+          const trace = {};
+          let tail = '';
+          return {
+            onChunk: (chunk) => {
+              const rows = (tail + chunk).split('\\n');
+              tail = rows.pop();
+              rows.map(row => {
+                const m = row.match(/\\s*([0-9a-f]+):\\s*([0-9a-f]+)\\s+(.+)/);
+                if (m) {
+                  const pc = parseInt(m[1], 16);
+                  const op = m[2];
+                  const asm = m[3].replace(/\\t/, ' ');
+                  trace[pc] = {op, asm};
+                }
+              });
+            },
+            getTrace: () => trace
+          };
+        };
 
+        const getListing = async (readers) => {
+          let listing = [];
+          const r = readers.find(reader => reader.ext === 'lst');
+          if (r) {
+            const utf8Decoder = new TextDecoder('utf-8');
+            const list = lister();
+            for (let i = 0; i < 10000; i++) {
+              let { done, value } = await r.reader.read();
+              if (typeof value !== 'string') {
+                value = utf8Decoder.decode(value, {stream: true});
+              }
+              list.onChunk(value);
+              if (done) {
+                listing = list.getTrace();
+                break;
+              }
+            }
+          }
+          return listing;
+        };
 
 
        const getPathBaseName = (path) => {
@@ -434,7 +475,7 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          jsonls.push(r);
        }
 
-       // console.log(jsonls);
+       console.log(jsonls);
        return jsonls;
      };
 
@@ -544,14 +585,31 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          });
        };
      };
+
+     const pluginLocalStore = (desc, pstate /* , els */) => {
+       localStorage.setItem(
+         'vcdrom',
+         JSON.stringify({
+           // yOffset: pstate.yOffset,
+           xOffset: pstate.xOffset,
+           xScale: pstate.xScale
+         })
+       );
+     };
+
      const getHandler = (content, inst) => async (readers) => {
      console.log(content);
      console.log(inst);
+      console.log(readers);
      console.log("was passed");
        const waveql = await getWaveql(readers);
        const listing = await getListing(readers);
+       console.log("the listing");
+       console.log(listing);
        const jsonls = await getJsonls(readers);
+       console.log(jsonls);
        const timeOpt = readers.find((row) => row.key === "time");
+       console.log(timeOpt);
 
        vcdPipeDeso({ wires: { body: [] } }, inst, (deso) => {
          content.innerHTML = "";
