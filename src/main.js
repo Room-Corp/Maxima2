@@ -8,8 +8,7 @@ const fs = require("fs");
 
 const createVCD = require("vcd-stream/out/vcd.js");
 const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
-const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
-const getVcd = require("vcd-stream/lib/get-vcd.js");
+//const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
 const dropZone = require("./drop-zone.js");
 
 const stringify = require("onml/stringify.js");
@@ -285,9 +284,9 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
   const webContents = event.sender;
-  const mod = await createVCD();
-  const inst = await webVcdParser(mod);
-  console.log(inst);
+  // const mod = await createVCD();
+  // const inst = await webVcdParser(mod);
+  // console.log(inst);
   // i think these methods need to go in execute havascruot
 
   //console.log(inst);
@@ -295,9 +294,11 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
     await webContents.executeJavaScript(`
 
 
-
       const { StyleModule } = require('style-mod');
       const fs = require("fs");
+      const createVCD = require("vcd-stream/out/vcd.js");
+      const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
+      const { Readable } = require('node:stream');
       const {
         domContainer,
         pluginRenderValues,
@@ -365,8 +366,10 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          const baseName = getPathBaseName(value);
          readers.push({ ext, value, baseName, reader, file });
        }
+       console.log(readers);
        await handler(readers);
      };
+
      const getWaveql = async (readers) => {
        let waveql;
        const r = readers.find(reader => reader.ext === 'waveql');
@@ -569,7 +572,7 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
              elo.rightPanel.innerHTML = stringify(helpPanel.mlPanel(keyBindo));
            },
          });
-
+         console.log("apppended child bozo ass");
          content.appendChild(container.pstate.container);
          container.start(deso);
 
@@ -581,6 +584,7 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
          );
 
          deso.hasHistory = true;
+         console.log(deso.hasHistory);
          deso.isRO = true;
          deso.updater = (/* str */) => {
            console.log("updater");
@@ -617,19 +621,18 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
        });
 
        await getVcd(readers, content, inst);
-       console.log("getVcd");
+       console.log("getVcd from vcdpPipe");
      };
+     async function readChunk(reader) {
+       const { done, value } = await reader.read();
+       return { done, value };
+     }
+     const maxChunkLength = 1 << 17; // Number.MAX_SAFE_INTEGER; // 5e6; // 300000; // 1 << 23;
 
      const getVcd = async (readers, content, inst) => {
-     console.log(inst);
-     console.log("inst is above");
-
-       const maxChunkLength = 1 << 17; // Number.MAX_SAFE_INTEGER; // 5e6; // 300000; // 1 << 23;
-       console.log(readers);
-       console.log(readers.find(reader => reader.ext === 'vcd'));
-
        const r = readers.find(reader => reader.ext === 'vcd');
        if (r) {
+         // console.log('VCD', r);
          document.title = r.baseName;
          content.innerHTML = '<div class="wd-progress">LOADING...</div>';
          let total = 0;
@@ -654,12 +657,11 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
 
              content.innerHTML = '<div class="wd-progress">' + total.toLocaleString() + '</div>';
              if (done && ((j + maxChunkLength) >= len)) {
-               // console.log('last chunk');
+               console.log('last chunk');
                inst.end(value1);
                break outerLoop;
              }
-            inst.write(value1);
-            console.log("wrote");
+             inst.write(value1);
            }
          }
        }
@@ -688,59 +690,30 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
        zlocal: ".",
      };
 
+
      const getReaders = async (handler, vcdPath) => {
-     console.log(vcdPath);
-     console.log("was passed 2");
+      console.log("was passed 2");
+
        const res = [];
-       if (typeof vcdPath === "string") {
-         const fileContent = await readFileAsync(vcdPath);
-         let reader = {
-           data: fileContent,
-           position: 0,
-           read: () => {
-             const chunk = reader.data.slice(reader.position, reader.position + 1024);
-             reader.position += chunk.length;
-             return { value: chunk, done: reader.position >= reader.data.length };
-           }
-         };
+console.log("stream created 1" );
+         const fileStream = fs.createReadStream(vcdPath);
+         console.log("stream created 1" );
+         const webStream = Readable.toWeb(fileStream);
+         console.log("stream created 2" );
+         const reader = webStream.getReader();
+         console.log("stream created 3" );
+
          console.log("this one");
          const ext = getExt(vcdPath);
          res.push({
            key: "local",
-           ext: ext,
+           ext: "vcd",
            value: vcdPath,
            format: "raw",
            baseName: getPathBaseName(vcdPath),
            url: vcdPath,
            reader,
          });
-       } else if (typeof vcdPath === "function") {
-         console.log("vcdPath is function");
-         const context = vcdPath(handler);
-         console.log(context);
-       } else {
-         const urlSearchParams = new URLSearchParams(window.location.search);
-         for (const [key, value] of urlSearchParams) {
-           let format, ext, url, reader;
-           if (urlRaw[key]) {
-             format = "raw";
-             ext = getExt(value);
-             url = urlRaw[key] + "/" + value;
-             const resp = await readFileAsync(url);
-             reader = resp;
-           } else if (urlZip[key]) {
-             format = "zip";
-             ext = getExt(value);
-             url = urlZip[key] + "/" + value;
-             const resp = await readFileAsync(url);
-             reader = resp;
-           } else {
-             format = "arg";
-           }
-           const baseName = getPathBaseName(value);
-           res.push({ key, value, baseName, format, ext, url, reader });
-         }
-       }
 
        if (res.length > 0) {
          await handler(res);
@@ -803,12 +776,26 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
        }
      };
 
-      async function initHandler() {
-      console.log("the path is" + '${vcdPath}');
-      await getReaders(handler, '${vcdPath}');
-    }
+     async function initHandler() {
+       console.log('Initializing handler');
+       try {
+         const mod = await createVCD();
+         console.log('createVCD successful');
+         const inst = await webVcdParser(mod);
+         console.log('webVcdParser successful');
+         const handler = getHandler(content, inst);
+         console.log('Handler created');
+         await getReaders(handler, '${vcdPath}');
+       } catch (error) {
+         console.error('Error in initHandler:', error);
+       }
+     }
+
+
 
       const content = document.getElementById('${divId}');
+      console.log("Content element:", content);
+      console.log("Content innerHTML:", content.innerHTML);
       const themeAllMod = new StyleModule(${JSON.stringify(themeAll)});
       StyleModule.mount(document, themeAllMod);
       content.innerHTML = ${JSON.stringify(stringify(dropZone({ width: 2048, height: 2048 })))};
@@ -818,9 +805,9 @@ ipcMain.handle("initVCDrom", async (event, divId, vcdPath) => {
       dropZoneElement.addEventListener("drop", handleDrop);
 
 
-      const handler = getHandler(content, '${inst}');
+
       console.log("pan-handler");
-      console.log(handler);
+      //console.log(handler);
       initHandler();
 
 

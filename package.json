@@ -41,7 +41,7 @@
     "@wavedrom/doppler": "^1.11.0",
     "a": "^3.0.1",
     "d3-wave": "^1.1.5",
-    "dot-prop": "^8.0.2",
+    "dot-prop": "^6.0.1",
     "electron-squirrel-startup": "^1.0.0",
     "file-loader": "^6.2.0",
     "fs-extra": "^11.2.0",
