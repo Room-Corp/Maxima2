@@ -47,6 +47,7 @@
     "fs-extra": "^11.2.0",
     "monaco-editor": "^0.47.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
+    "node-gyp": "^10.1.0",
     "node-pty": "^1.0.0",
     "onml": "^2.1.0",
     "path-browserify": "^1.0.1",

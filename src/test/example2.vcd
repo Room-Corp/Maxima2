@@ -1,0 +1,56 @@
+$date
+	Thu Jun 27 17:12:26 2024
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module mux2_1_tb $end
+$var wire 1 ! out $end
+$var reg 1 " i0 $end
+$var reg 1 # i1 $end
+$var reg 1 $ sel $end
+$scope module dut $end
+$var wire 1 " i0 $end
+$var wire 1 # i1 $end
+$var wire 1 ! out $end
+$var wire 1 $ sel $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+0$
+0#
+0"
+0!
+$end
+#10000
+1#
+#20000
+1!
+0#
+1"
+#30000
+1#
+#40000
+0!
+0#
+0"
+1$
+#50000
+1!
+1#
+#60000
+0!
+0#
+1"
+#70000
+1!
+1#
+#80000
