@@ -45,9 +45,3 @@ import "./index.js";
 console.log(
   '👋 This message is being logged by "renderer.js", included via webpack',
 );
-
-document.addEventListener("DOMContentLoaded", () => {
-  const divElement = document.getElementById("container");
-  console.log("Wave container element:", divElement);
-  // You can perform operations on the divElement here
-});

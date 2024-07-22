@@ -8,6 +8,7 @@ module.exports = {
   module: {
     rules: require("./webpack.rules"),
   },
+
   externals: {
     "node-pty": "commonjs node-pty",
   },
@@ -20,5 +21,6 @@ module.exports = {
       fs: require.resolve("fs-extra"),
       path: require.resolve("path-browserify"),
     },
+    extensions: [".tsx", ".ts", ".js", ".jsx"],
   },
 };

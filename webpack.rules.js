@@ -14,6 +14,11 @@ module.exports = [
     test: /\.(gif|svg|jpg|png)$/,
     loader: "file-loader",
   },
+  {
+    test: /\.tsx?$/,
+    use: "ts-loader",
+    exclude: /node_modules/,
+  },
 
   // ... existing loader config ...
 ];

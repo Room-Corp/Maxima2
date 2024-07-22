@@ -1,39 +1,10 @@
 const { app, ipcMain, BrowserWindow } = require("electron");
-const vcdModule = require("./vcd.wasm");
 const path = require("path");
 //var Terminal = require('xterm').Terminal;
 const pty = require("node-pty");
 const os = require("os");
 const fs = require("fs");
 
-const createVCD = require("vcd-stream/out/vcd.js");
-const webVcdParser = require("vcd-stream/lib/web-vcd-parser.js");
-//const vcdPipeDeso = require("vcd-stream/lib/vcd-pipe-deso.js");
-const dropZone = require("./drop-zone.js");
-
-const stringify = require("onml/stringify.js");
-
-const { StyleModule } = require("style-mod");
-
-const getReaders = require("./get-readers.js");
-
-const VCDrom = require("./vcdrom.js");
-
-const {
-  domContainer,
-  pluginRenderValues,
-  pluginRenderTimeGrid,
-  keyBindo,
-  mountTree,
-  getElement,
-  // getListing,
-  genKeyHandler,
-  genOnWheel,
-  themeAll,
-  helpPanel,
-} = require("@wavedrom/doppler");
-
-const { createCodeMirrorState, mountCodeMirror6 } = require("waveql");
 const { useEffect } = require("react");
 
 // Initialize node-pty with an appropriate shell
@@ -72,14 +43,6 @@ const createWindow = () => {
   mainWindow.maximize();
 };
 
-// xtermTerminal.onData(data => ptyProcess.write(data));
-// ptyProcess.on('data', function (data) {
-// xtermTerminal.write(data);
-// });
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on("ready", createWindow);
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -89,24 +52,6 @@ let count = 0;
 let row = 0;
 let col = 0;
 let ptyProcess;
-
-const getWaveql = async (readers) => {
-  let waveql;
-  const r = readers.find((reader) => reader.ext === "waveql");
-  if (r && r.reader) {
-    // console.log('WaveQL', r);
-    const utf8Decoder = new TextDecoder("utf-8");
-    waveql = "";
-    for (let i = 0; i < 1e5; i++) {
-      const { done, value } = await r.reader.read();
-      waveql += value ? utf8Decoder.decode(value, { stream: true }) : "";
-      if (done) {
-        break;
-      }
-    }
-  }
-  return waveql;
-};
 
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
@@ -200,17 +145,37 @@ function getTestbenchFilename(files, currentFileName) {
   // Return null if none of the file names contain "testbench", "tb", or the current file name
   return "not found";
 }
+ipcMain.handle("get-vcd-content", async () => {
+  try {
+    // Use app.getAppPath() to get the root of your application
+    const projectRoot = app.getAppPath();
+    const vcdPath = path.join(projectRoot, "src", "test", "simple.vcd");
 
+    console.log("Attempting to read file at:", vcdPath);
+
+    if (fs.existsSync(vcdPath)) {
+      console.log("File exists");
+      const vcdContent = await fs.promises.readFile(vcdPath, "utf8");
+      return vcdContent;
+    } else {
+      console.log("File does not exist");
+      throw new Error("VCD file not found");
+    }
+  } catch (error) {
+    console.error("Error reading VCD file:", error);
+    throw error;
+  }
+});
 //currently we compile the files a very specialized way
 ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
-  const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
-  const pt = pty.spawn(shell, [], {
-    name: "vcd-generator",
-    cols: col,
-    rows: row,
-    cwd: folderPath,
-    env: process.env,
-  });
+  // const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
+  // const pt = pty.spawn(shell, [], {
+  //   name: "vcd-generator",
+  //   cols: col,
+  //   rows: row,
+  //   cwd: folderPath,
+  //   env: process.env,
+  // });
 
   console.log(filePath);
 
@@ -232,39 +197,38 @@ ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
   });
   console.log(extension);
 
-  //currently supports sv
+  // iverilog -g2012 -o simple.out simple.sv
+  // pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  // pt.write("vvp example.out \r");
+  // console.log(
+  //   "iverilog -g2012 -o " +
+  //     name +
+  //     ".out " +
+  //     testBenchFile +
+  //     " " +
+  //     name +
+  //     "." +
+  //     extension +
+  //     " \r",
+  // );
+  // pt.write(
+  //   "iverilog -g2012 -o " +
+  //     name +
+  //     ".out " +
+  //     testBenchFile +
+  //     " " +
+  //     name +
+  //     "." +
+  //     extension +
+  //     " \r",
+  // );
+  // pt.write("vvp " + name + ".out" + " \r");
 
-  pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
-  pt.write("vvp example.out \r");
-  console.log(
-    "iverilog -g2012 -o " +
-      name +
-      ".out " +
-      testBenchFile +
-      " " +
-      name +
-      "." +
-      extension +
-      " \r",
-  );
-  pt.write(
-    "iverilog -g2012 -o " +
-      name +
-      ".out " +
-      testBenchFile +
-      " " +
-      name +
-      "." +
-      extension +
-      " \r",
-  );
-  pt.write("vvp " + name + ".out" + " \r");
-
-  var testbenchCode = fs
-    .readFileSync(folderPath + "/" + testBenchFile)
-    .toString();
-  const dumpfileStatement = testbenchCode.match(/\$dumpfile\("(.+)"\)/);
-  const dumpFileName = dumpfileStatement ? dumpfileStatement[1] : null;
+  // var testbenchCode = fs
+  //   .readFileSync(folderPath + "/" + testBenchFile)
+  //   .toString();
+  // const dumpfileStatement = testbenchCode.match(/\$dumpfile\("(.+)"\)/);
+  // const dumpFileName = dumpfileStatement ? dumpfileStatement[1] : null;
 
   //return;
   // get directory, then check for test bench

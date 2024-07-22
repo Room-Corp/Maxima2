@@ -12,19 +12,14 @@ import {
   PanelResizeHandle,
   getPanelElement,
 } from "react-resizable-panels";
-import { WaveGraph } from "d3-wave";
-import { VcdParser } from "./Parser.js";
-import WaveformGraph from "./WaveformGraph";
 import saveIcon from "./icons/saveicon.png";
 import openIcon from "./icons/openfile.png";
 import verilogIcon from "./icons/verilog.png";
 import systemVerilogIcon from "./icons/svicon2.png";
 import fileIconNew from "./icons/fileIconNew.png";
-
-import VCDromComponent from "./VcdWaveForm.js";
-
-//import { VCDrom } from "vcdrom";
-//import Wave2 from "./vcdRomWave.js";
+import Popup from "reactjs-popup";
+import { parseVCD } from "./vcdParser.ts";
+import WaveformViewer from "./WaveformViewer.tsx";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 
@@ -70,7 +65,7 @@ function App() {
   const [parseData, setParsedData] = useState();
 
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ["Terminal", "Wave Form Viewer", "VcDrom"];
+  const tabs = ["Terminal", "Wave Form Viewer"];
 
   const [openTabs, setOpenTab] = useState([]);
   const [openFiles, setOpenFile] = useState([]);
@@ -79,26 +74,46 @@ function App() {
   const [folderPath, setFolderPath] = useState([]);
 
   // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
+  //
+  const [waveformData, setWaveformData] = useState(null);
+  const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
+
+  useEffect(() => {
+    const loadPresetVCDFile = async () => {
+      setIsLoadingWaveform(true);
+      try {
+        // Assuming you have a method to get the VCD file content
+        const vcdContent = await ipcRenderer.invoke("get-vcd-content");
+        const parsedData = await parseVCD(vcdContent);
+        setWaveformData(parsedData);
+      } catch (error) {
+        console.error("Error loading preset VCD file:", error);
+      } finally {
+        setIsLoadingWaveform(false);
+      }
+    };
+
+    loadPresetVCDFile();
+  }, []);
 
   const folderInput = useRef(null);
   const openWaveForm = async () => {
     console.log("file has bene found");
 
-    const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
+    //const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
     // ipcRenderer.send("modify-div", "sideBary");
     // const fileContents = await readFileContents("./test/swerv1.vcd");
 
     // switch this to work with relative paths
-    const invokeReturn = await ipcRenderer.invoke(
-      "get-code",
-      "/Users/farhankhan/Maxima2/src/test/example.vcd",
-    );
-    console.log(invokeReturn);
-    console.log("filedone");
-    const parser = new VcdParser();
-    parser.parse_str(invokeReturn);
-    console.log(parser);
-    setParsedData(parser.scope.toJson());
+    // const invokeReturn = await ipcRenderer.invoke(
+    //   "get-code",
+    //   "/Users/farhankhan/Maxima2/src/test/example.vcd",
+    // );
+    // console.log(invokeReturn);
+    // console.log("filedone");
+    // parser.parse_str(invokeReturn);
+    // console.log(parser);
+    // setParsedData(parser.scope.toJson());
     //console.log("json String is");
     //console.log(jsonString);
   };
@@ -199,6 +214,14 @@ function App() {
     fileManager: {
       display: "flex",
       flexDirection: "row",
+    },
+
+    loadingContainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100%",
+      color: "white",
     },
   };
   const onTermInit = (term) => {
@@ -466,20 +489,6 @@ function App() {
     await setEditor(openFiles[index]);
   };
 
-  const openWaveDrom = () => {
-    // const divElement = document.getElementById("waveContainer");
-    // console.log(divElement);
-    //const divElement = document.getElementById("waveContainer");
-    //console.log(divElement);
-
-    ipcRenderer.send(
-      "get-wave",
-      "Users/farhankhan/Maxima2/src/test/example.vcd",
-      "waveContainer",
-    );
-    //return "hi";
-  };
-
   return (
     <div id="container" style={styles.container}>
       <div
@@ -490,11 +499,14 @@ function App() {
           width: "100%",
           borderBottom: "1px solid #565656",
           backgroundColor: "#323232",
-          paddingLeft: "2%",
           gap: "2%",
         }}
       >
-        <div style={{ position: "relative" }}>
+        <div
+          style={{
+            position: "relative",
+          }}
+        >
           <label htmlFor="folderInput">
             <img
               style={{
@@ -527,10 +539,31 @@ function App() {
             alt="Save Icon"
           />
         </button>
+        <Popup
+          trigger={
+            <button style={{ backgroundColor: "red", border: "none" }}>
+              Settings
+            </button>
+          }
+          position="center"
+          contentStyle={{
+            position: "fixed",
+            top: "-50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "white",
+            padding: "20px",
+            zIndex: 9999,
+            width: "20%",
+            height: "20%",
+          }}
+        >
+          <div>Popup content here !!</div>
+        </Popup>
       </div>
 
       <PanelGroup direction="horizontal">
-        <Panel minSize={5} defaultSize={10}>
+        <Panel minSize={5} defaultSize={10} maxSize={25}>
           <div id="sideBary" style={styles.sideBar}>
             <MyList items={files} />
           </div>
@@ -645,23 +678,17 @@ function App() {
                   )}
                   {activeTab === 1 && (
                     <div style={styles.waveFormPanel}>
-                      <WaveformGraph parsedData={parseData} />
-                    </div>
-                  )}
-                  {activeTab == 2 && ( //WaveFormVRom()
-                    <div
-                      style={{
-                        backgroundColor: "transparent",
-                        height: "400px",
-                        width: "1000px",
-                      }}
-                      id="waveContainer"
-                    >
-                      <VCDromComponent
-                        vcdPath={
-                          "/Users/farhankhan/Maxima2/src/test/swerv1.vcd"
-                        }
-                      />
+                      {isLoadingWaveform ? (
+                        <div style={styles.loadingContainer}>
+                          <p>Loading waveform...</p>
+                        </div>
+                      ) : waveformData ? (
+                        <WaveformViewer data={waveformData} />
+                      ) : (
+                        <div style={styles.loadingContainer}>
+                          <p>No waveform data available</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
