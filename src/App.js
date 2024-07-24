@@ -22,6 +22,7 @@ import { parseVCD } from "./vcdParser.ts";
 import WaveformViewer from "./WaveformViewer.tsx";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
+//
 
 function useWindowDimensions() {
   const [windowDimensions, setWindowDimensions] = useState(
@@ -48,6 +49,365 @@ function getWindowDimensions() {
   };
 }
 
+monaco.languages.setMonarchTokensProvider("systemverilog", {
+  defaultToken: "",
+  tokenPostfix: ".sv",
+
+  keywords: [
+    "accept_on",
+    "alias",
+    "always",
+    "always_comb",
+    "always_ff",
+    "always_latch",
+    "and",
+    "assert",
+    "assign",
+    "assume",
+    "automatic",
+    "before",
+    "begin",
+    "bind",
+    "bins",
+    "binsof",
+    "bit",
+    "break",
+    "buf",
+    "bufif0",
+    "bufif1",
+    "byte",
+    "case",
+    "casex",
+    "casez",
+    "cell",
+    "chandle",
+    "class",
+    "clocking",
+    "cmos",
+    "config",
+    "const",
+    "constraint",
+    "context",
+    "continue",
+    "cover",
+    "covergroup",
+    "coverpoint",
+    "cross",
+    "deassign",
+    "default",
+    "defparam",
+    "design",
+    "disable",
+    "dist",
+    "do",
+    "edge",
+    "else",
+    "end",
+    "endcase",
+    "endclass",
+    "endclocking",
+    "endconfig",
+    "endfunction",
+    "endgenerate",
+    "endgroup",
+    "endinterface",
+    "endmodule",
+    "endpackage",
+    "endprimitive",
+    "endprogram",
+    "endproperty",
+    "endspecify",
+    "endsequence",
+    "endtable",
+    "endtask",
+    "enum",
+    "event",
+    "expect",
+    "export",
+    "extends",
+    "extern",
+    "final",
+    "first_match",
+    "for",
+    "force",
+    "foreach",
+    "forever",
+    "fork",
+    "forkjoin",
+    "function",
+    "generate",
+    "genvar",
+    "highz0",
+    "highz1",
+    "if",
+    "iff",
+    "ifnone",
+    "ignore_bins",
+    "illegal_bins",
+    "import",
+    "incdir",
+    "include",
+    "initial",
+    "inout",
+    "input",
+    "inside",
+    "instance",
+    "int",
+    "integer",
+    "interface",
+    "intersect",
+    "join",
+    "join_any",
+    "join_none",
+    "large",
+    "liblist",
+    "library",
+    "local",
+    "localparam",
+    "logic",
+    "longint",
+    "macromodule",
+    "matches",
+    "medium",
+    "modport",
+    "module",
+    "nand",
+    "negedge",
+    "new",
+    "nmos",
+    "nor",
+    "noshowcancelled",
+    "not",
+    "notif0",
+    "notif1",
+    "null",
+    "or",
+    "output",
+    "package",
+    "packed",
+    "parameter",
+    "pmos",
+    "posedge",
+    "primitive",
+    "priority",
+    "program",
+    "property",
+    "protected",
+    "pull0",
+    "pull1",
+    "pulldown",
+    "pullup",
+    "pulsestyle_onevent",
+    "pulsestyle_ondetect",
+    "pure",
+    "rand",
+    "randc",
+    "randcase",
+    "randsequence",
+    "rcmos",
+    "real",
+    "realtime",
+    "ref",
+    "reg",
+    "release",
+    "repeat",
+    "return",
+    "rnmos",
+    "rpmos",
+    "rtran",
+    "rtranif0",
+    "rtranif1",
+    "scalared",
+    "sequence",
+    "shortint",
+    "shortreal",
+    "showcancelled",
+    "signed",
+    "small",
+    "solve",
+    "specify",
+    "specparam",
+    "static",
+    "string",
+    "strong0",
+    "strong1",
+    "struct",
+    "super",
+    "supply0",
+    "supply1",
+    "sync_accept_on",
+    "sync_reject_on",
+    "table",
+    "tagged",
+    "task",
+    "this",
+    "throughout",
+    "time",
+    "timeprecision",
+    "timeunit",
+    "tran",
+    "tranif0",
+    "tranif1",
+    "tri",
+    "tri0",
+    "tri1",
+    "triand",
+    "trior",
+    "trireg",
+    "type",
+    "typedef",
+    "union",
+    "unique",
+    "unsigned",
+    "use",
+    "var",
+    "vectored",
+    "virtual",
+    "void",
+    "wait",
+    "wait_order",
+    "wand",
+    "weak0",
+    "weak1",
+    "while",
+    "wildcard",
+    "wire",
+    "with",
+    "within",
+    "wor",
+    "xnor",
+    "xor",
+  ],
+
+  operators: [
+    "=",
+    ">",
+    "<",
+    "!",
+    "~",
+    "?",
+    ":",
+    "==",
+    "<=",
+    ">=",
+    "!=",
+    "&&",
+    "||",
+    "++",
+    "--",
+    "+",
+    "-",
+    "*",
+    "/",
+    "&",
+    "|",
+    "^",
+    "%",
+    "<<",
+    ">>",
+    ">>>",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "&=",
+    "|=",
+    "^=",
+    "%=",
+    "<<=",
+    ">>=",
+    ">>>=",
+  ],
+
+  symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+  escapes:
+    /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+
+  tokenizer: {
+    root: [
+      [
+        /[a-z_$][\w$]*/,
+        { cases: { "@keywords": "keyword", "@default": "identifier" } },
+      ],
+      [/[A-Z][\w\$]*/, "type.identifier"],
+
+      { include: "@whitespace" },
+
+      [/[{}()\[\]]/, "@brackets"],
+      [/[<>](?!@symbols)/, "@brackets"],
+      [/@symbols/, { cases: { "@operators": "operator", "@default": "" } }],
+
+      [/\d*\d+[eE]([\-+]?\d+)?/, "number.float"],
+      [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
+      [/\d[\d']*/, "number"],
+      [/\d+/, "number"],
+
+      [/[;,.]/, "delimiter"],
+
+      [/"([^"\\]|\\.)*$/, "string.invalid"],
+      [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+
+      [/'[^\\']'/, "string"],
+      [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
+      [/'/, "string.invalid"],
+    ],
+
+    comment: [
+      [/[^\/*]+/, "comment"],
+      [/\/\*/, "comment", "@push"],
+      ["\\*/", "comment", "@pop"],
+      [/[\/*]/, "comment"],
+    ],
+
+    string: [
+      [/[^\\"]+/, "string"],
+      [/@escapes/, "string.escape"],
+      [/\\./, "string.escape.invalid"],
+      [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
+    ],
+
+    whitespace: [
+      [/[ \t\r\n]+/, "white"],
+      [/\/\*/, "comment", "@comment"],
+      [/\/\/.*$/, "comment"],
+    ],
+  },
+});
+
+// Configuration for SystemVerilog language
+monaco.languages.setLanguageConfiguration("systemverilog", {
+  comments: {
+    lineComment: "//",
+    blockComment: ["/*", "*/"],
+  },
+  brackets: [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+  ],
+  autoClosingPairs: [
+    { open: "[", close: "]" },
+    { open: "{", close: "}" },
+    { open: "(", close: ")" },
+    { open: "'", close: "'", notIn: ["string", "comment"] },
+    { open: '"', close: '"', notIn: ["string"] },
+  ],
+  surroundingPairs: [
+    { open: "{", close: "}" },
+    { open: "[", close: "]" },
+    { open: "(", close: ")" },
+    { open: '"', close: '"' },
+    { open: "'", close: "'" },
+  ],
+  folding: {
+    markers: {
+      start: new RegExp("^\\s*#pragma\\s+region\\b"),
+      end: new RegExp("^\\s*#pragma\\s+endregion\\b"),
+    },
+  },
+});
+
 function App() {
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
   const [input, setInput] = useState("");
@@ -66,6 +426,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ["Terminal", "Wave Form Viewer"];
+  const editorRef = useRef(null);
 
   const [openTabs, setOpenTab] = useState([]);
   const [openFiles, setOpenFile] = useState([]);
@@ -78,12 +439,43 @@ function App() {
   const [waveformData, setWaveformData] = useState(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
 
+  function handleEditorDidMount(editor, monaco) {
+    editorRef.current = editor;
+
+    // Set up the model for the current file
+    if (filePath) {
+      const model =
+        monaco.editor.getModel(monaco.Uri.file(filePath)) ||
+        monaco.editor.createModel(code, language, monaco.Uri.file(filePath));
+      editor.setModel(model);
+    }
+  }
+
+  // Effect to update the editor model when the file changes
+  useEffect(() => {
+    if (editorRef.current && filePath) {
+      const editor = editorRef.current;
+      const model = editor.getModel();
+
+      if (
+        !model ||
+        model.uri.toString() !== monaco.Uri.file(filePath).toString()
+      ) {
+        const newModel =
+          monaco.editor.getModel(monaco.Uri.file(filePath)) ||
+          monaco.editor.createModel(code, language, monaco.Uri.file(filePath));
+        editor.setModel(newModel);
+        setEditorContent(code);
+      }
+    }
+  }, [filePath, language]);
+
   useEffect(() => {
     const loadPresetVCDFile = async () => {
       setIsLoadingWaveform(true);
       try {
         // Assuming you have a method to get the VCD file content
-        const vcdContent = await ipcRenderer.invoke("get-vcd-content");
+        const vcdContent = await ipcRenderer.invoke("get-vcd");
         const parsedData = await parseVCD(vcdContent);
         setWaveformData(parsedData);
       } catch (error) {
@@ -100,9 +492,9 @@ function App() {
   const openWaveForm = async () => {
     console.log("file has bene found");
 
-    //const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
-    // ipcRenderer.send("modify-div", "sideBary");
-    // const fileContents = await readFileContents("./test/swerv1.vcd");
+    const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
+    const parsedData = await parseVCD(vcdFile);
+    setWaveformData(parsedData);
 
     // switch this to work with relative paths
     // const invokeReturn = await ipcRenderer.invoke(
@@ -380,6 +772,26 @@ function App() {
         );
     }
   };
+  function getLanguageFromExtension(fileName) {
+    const extension = fileName.split(".").pop().toLowerCase();
+    switch (extension) {
+      case "css":
+      case "html":
+      case "python":
+      case "dart":
+      case "json":
+        return extension;
+      case "lock":
+        return "yaml";
+      case "sv":
+        return "systemverilog";
+      case "v":
+        return "verilog";
+      default:
+        return "plaintext";
+    }
+  }
+
   async function setEditorFromFile(fileName) {
     // add function to check if directory here !
     //
@@ -422,34 +834,13 @@ function App() {
     }
   }
   async function setEditor(fileName) {
-    // add function to check if directory here !
-    //
     let finalName = fileName.path + "/" + fileName.name;
-
     const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
-    //console.log(invokeReturn);
 
-    let typist = typeof invokeReturn;
-    if (typist == "string") {
+    if (typeof invokeReturn === "string") {
       setCode(invokeReturn);
-      //console.log(newCode);
-      let newLanguage = "javascript";
-      const extension = finalName.split(".").pop();
-      if (["css", "html", "python", "dart", "json"].includes(extension)) {
-        newLanguage = extension;
-      } else if ("lock".includes(extension)) {
-        newLanguage = "yaml";
-      } else if ("sv".includes(extension)) {
-        newLanguage = "systemverilog";
-      } else if ("v".includes(extension)) {
-        newLanguage = "verilog";
-      } else {
-        newLanguage = "plaintext";
-      }
-      console.log(openTabs);
+      let newLanguage = getLanguageFromExtension(finalName);
       setLanguage(newLanguage);
-
-      console.log(language);
       setFilePath(finalName);
     } else {
       console.log("opening new folder");
@@ -613,16 +1004,21 @@ function App() {
                 <div style={styles.editor}>
                   <Editor
                     height="90vh"
-                    defaultLanguage="javascript"
                     language={language}
                     value={code}
+                    path={filePath} // Add this line
                     theme="vs-dark"
                     onChange={(newCode) => {
                       setCode(newCode);
                     }}
+                    onMount={handleEditorDidMount}
                     options={{
                       minimap: {
                         enabled: false,
+                      },
+                      // Enable linting
+                      lint: {
+                        enabled: true,
                       },
                     }}
                   />

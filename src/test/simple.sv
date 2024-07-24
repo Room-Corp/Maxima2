@@ -55,7 +55,7 @@ ps <= ns;
 LEDR <= ps;
 end
 end
-endmodule
+
 
 module simple_testbench();
 logic clk, reset;
@@ -79,7 +79,7 @@ reset <= 0; @(posedge clk); // two clock cycles to check alternating test
 @(posedge clk);
 @(posedge clk);
 @(posedge clk);
-SW <= 2'b00;  @(posedge clk);
+SW <= 2'b11;  @(posedge clk);
 @(posedge clk);
 @(posedge clk);
 @(posedge clk);
@@ -91,10 +91,11 @@ SW <= 2'b10; @(posedge clk);
 @(posedge clk);
 @(posedge clk);
 @(posedge clk);
-SW <= 2'b11; @(posedge clk);
+SW <= 2'b00; @(posedge clk);
 @(posedge clk);
 @(posedge clk);
 @(posedge clk);
 $stop; // End the simulation.
 end
 endmodule
+

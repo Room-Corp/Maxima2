@@ -53,6 +53,7 @@ let row = 0;
 let col = 0;
 let ptyProcess;
 
+// race condition --> what is loading terminal needs to be connected
 ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   row = terminalInfo.rows;
   col = terminalInfo.cols;
@@ -71,7 +72,6 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
 ipcMain.handle("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
-    // console.log("data is " + data);
   });
 });
 
@@ -145,13 +145,69 @@ function getTestbenchFilename(files, currentFileName) {
   // Return null if none of the file names contain "testbench", "tb", or the current file name
   return "not found";
 }
-ipcMain.handle("get-vcd-content", async () => {
+const waitForFile = (filePath, timeout = 10000, interval = 100) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    const checkFileExists = () => {
+      if (fs.existsSync(filePath)) {
+        resolve(true);
+      } else if (Date.now() - startTime > timeout) {
+        reject(new Error("Timeout waiting for file to be created"));
+      } else {
+        setTimeout(checkFileExists, interval);
+      }
+    };
+
+    checkFileExists();
+  });
+};
+//currently we compile the files a very specialized way
+ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
+  console.log(filePath);
+  const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
+  const pt = pty.spawn(shell, [], {
+    name: "vcd-generator",
+    cols: col,
+    rows: row,
+    cwd: folderPath,
+    env: process.env,
+  });
+
+  // this will allow us to run different scripts, build different waveforms
+  const extension = filePath.split(".").pop();
+  const slashIdx = filePath.lastIndexOf("/") + 1;
+
+  // Find the index of the dot to get the end index
+  const dotIdx = filePath.lastIndexOf(".");
+
+  // Extract the name
+  let fileName = filePath.substring(slashIdx);
+  let name = filePath.substring(slashIdx, dotIdx);
+  console.log("file name is:" + name);
+  // const files = await readdirS(folderPath);
+
+  // let testBenchFile = getTestbenchFilename(files, name);
+  pt.onData((data) => {
+    console.log("data is " + data);
+  });
+  // console.log(extension);
+
+  // iverilog -g2012 -o simple.out simple.sv
+  //pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  //pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  pt.write("iverilog -g2012 -o " + name + ".out " + fileName + " \r");
+  pt.write("vvp " + name + ".out \r");
+
   try {
     // Use app.getAppPath() to get the root of your application
     const projectRoot = app.getAppPath();
-    const vcdPath = path.join(projectRoot, "src", "test", "simple.vcd");
+    const vcdPath = path.join(projectRoot, "src", "test", name + ".vcd");
+    console.log(vcdPath);
 
     console.log("Attempting to read file at:", vcdPath);
+
+    await waitForFile(vcdPath, 10000, 500); // Wait for up to 10 seconds, checking every 500ms
 
     if (fs.existsSync(vcdPath)) {
       console.log("File exists");
@@ -165,79 +221,6 @@ ipcMain.handle("get-vcd-content", async () => {
     console.error("Error reading VCD file:", error);
     throw error;
   }
-});
-//currently we compile the files a very specialized way
-ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
-  // const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
-  // const pt = pty.spawn(shell, [], {
-  //   name: "vcd-generator",
-  //   cols: col,
-  //   rows: row,
-  //   cwd: folderPath,
-  //   env: process.env,
-  // });
-
-  console.log(filePath);
-
-  // this will allow us to run different scripts, build different waveforms
-  const extension = filePath.split(".").pop();
-  const slashIdx = filePath.lastIndexOf("/") + 1;
-
-  // Find the index of the dot to get the end index
-  const dotIdx = filePath.lastIndexOf(".");
-
-  // Extract the name
-  let name = filePath.substring(slashIdx, dotIdx);
-  console.log("file name is:" + name);
-  const files = await readdirS(folderPath);
-
-  let testBenchFile = getTestbenchFilename(files, name);
-  pt.onData((data) => {
-    console.log("data is " + data);
-  });
-  console.log(extension);
-
-  // iverilog -g2012 -o simple.out simple.sv
-  // pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
-  // pt.write("vvp example.out \r");
-  // console.log(
-  //   "iverilog -g2012 -o " +
-  //     name +
-  //     ".out " +
-  //     testBenchFile +
-  //     " " +
-  //     name +
-  //     "." +
-  //     extension +
-  //     " \r",
-  // );
-  // pt.write(
-  //   "iverilog -g2012 -o " +
-  //     name +
-  //     ".out " +
-  //     testBenchFile +
-  //     " " +
-  //     name +
-  //     "." +
-  //     extension +
-  //     " \r",
-  // );
-  // pt.write("vvp " + name + ".out" + " \r");
-
-  // var testbenchCode = fs
-  //   .readFileSync(folderPath + "/" + testBenchFile)
-  //   .toString();
-  // const dumpfileStatement = testbenchCode.match(/\$dumpfile\("(.+)"\)/);
-  // const dumpFileName = dumpfileStatement ? dumpfileStatement[1] : null;
-
-  //return;
-  // get directory, then check for test bench
-
-  //
-
-  //});
-
-  return folderPath + "/" + dumpFileName;
 });
 
 app.on("window-all-closed", () => {

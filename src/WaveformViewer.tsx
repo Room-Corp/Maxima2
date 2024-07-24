@@ -59,7 +59,9 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
     y: number;
   } | null>(null);
 
-  const [expandedSignals, setExpandedSignals] = useState<Record<string, boolean>>({
+  const [expandedSignals, setExpandedSignals] = useState<
+    Record<string, boolean>
+  >({
     SW: false,
     LEDR: false,
   });
@@ -81,7 +83,10 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
           groups[signal.name].push({
             name: `${signal.name}[${i}]`,
             width: 1,
-            wave: signal.wave.map(([time, value]) => [time, value[signal.width - 1 - i]]),
+            wave: signal.wave.map(([time, value]) => [
+              time,
+              value[signal.width - 1 - i],
+            ]),
           });
         }
       } else {
@@ -257,14 +262,14 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
     endX: number,
     y: number,
     height: number,
-    value: string
+    value: string,
   ) => {
     const boxHeight = height - 10;
     ctx.beginPath();
     ctx.strokeStyle = theme.palette.error.main; // Red outline
     ctx.rect(startX, y - boxHeight / 2, endX - startX, boxHeight);
     ctx.stroke();
-  
+
     // Draw 'x' or 'z' inside the box
     ctx.fillStyle = theme.palette.error.main;
     ctx.font = "12px Arial";
@@ -287,25 +292,25 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
   ) => {
     const effectiveYOffset = yOffset + signalPadding / 2;
     const effectiveSignalHeight = signalHeight - signalPadding;
-  
+
     if (
       effectiveYOffset + effectiveSignalHeight < timeScaleHeight ||
       effectiveYOffset > height
     )
       return;
-  
+
     ctx.lineWidth = 2;
-  
+
     let lastX = sidebarWidth;
     let lastY = effectiveYOffset + effectiveSignalHeight / 2;
     let lastValue: string | null = null;
-  
+
     const drawHexagon = (
       startX: number,
       endX: number,
       y: number,
       height: number,
-      isUndefined: boolean
+      isUndefined: boolean,
     ) => {
       const halfHeight = height / 2;
       ctx.beginPath();
@@ -316,10 +321,14 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
       ctx.lineTo(endX - halfHeight / 2, y + halfHeight);
       ctx.lineTo(startX + halfHeight / 2, y + halfHeight);
       ctx.closePath();
-      ctx.strokeStyle = isUndefined ? theme.palette.error.main : (theme.palette.mode === "dark" ? "#00ffff" : "#007aff");
+      ctx.strokeStyle = isUndefined
+        ? theme.palette.error.main
+        : theme.palette.mode === "dark"
+          ? "#00ffff"
+          : "#007aff";
       ctx.stroke();
     };
-  
+
     const drawWaveLine = (
       startX: number,
       endX: number,
@@ -332,35 +341,40 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
       ctx.lineTo(endX, endY);
       ctx.stroke();
     };
-  
+
     const maxEndX = Math.min(
       (visibleEndTime - visibleStartTime) * xScale + sidebarWidth,
       width,
     );
-  
+
     signal.wave.forEach(([time, value], index) => {
       const x = Math.min(
         (time - visibleStartTime) * xScale + sidebarWidth,
-        maxEndX
+        maxEndX,
       );
       let y = effectiveYOffset + effectiveSignalHeight / 2;
-  
+
       const nextTime = signal.wave[index + 1]
         ? signal.wave[index + 1][0]
         : visibleEndTime;
       const nextX = Math.min(
         (nextTime - visibleStartTime) * xScale + sidebarWidth,
-        maxEndX
+        maxEndX,
       );
-  
+
       if (x >= sidebarWidth - 1 && x <= maxEndX) {
         if (value === "x" || value === "z") {
           // Draw undefined state as a box
           ctx.beginPath();
-          ctx.rect(x, y - (effectiveSignalHeight - 10) / 2, nextX - x, effectiveSignalHeight - 10);
+          ctx.rect(
+            x,
+            y - (effectiveSignalHeight - 10) / 2,
+            nextX - x,
+            effectiveSignalHeight - 10,
+          );
           ctx.strokeStyle = theme.palette.error.main;
           ctx.stroke();
-  
+
           // Draw 'x' or 'z' inside the box
           ctx.fillStyle = theme.palette.error.main;
           ctx.font = "12px Arial";
@@ -371,8 +385,12 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
           if (!isGrouped && signal.width === 1) {
             // Draw single-bit signal
             const binaryValue = parseInt(value, 2);
-            y = effectiveYOffset + (binaryValue === 0 ? (3 * effectiveSignalHeight) / 4 : effectiveSignalHeight / 4);
-  
+            y =
+              effectiveYOffset +
+              (binaryValue === 0
+                ? (3 * effectiveSignalHeight) / 4
+                : effectiveSignalHeight / 4);
+
             if (lastValue !== null) {
               drawWaveLine(lastX, x, lastY, lastY);
               if (lastValue !== value) {
@@ -383,29 +401,30 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
           } else {
             // Draw multi-bit signal as hexagon
             drawHexagon(x, nextX, y, effectiveSignalHeight - 10, false);
-            
+
             ctx.fillStyle = theme.palette.text.primary;
-            ctx.font = "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif";
+            ctx.font =
+              "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif";
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            
+
             // Ensure correct display of SW signal
-            let displayValue = signal.name === 'SW' 
-              ? value.split('').reverse().join('')
-              : value;
+            let displayValue =
+              signal.name === "SW" ? value.split("").reverse().join("") : value;
             ctx.fillText(displayValue, x + 5, y);
           }
         }
-  
+
         lastX = x;
         lastY = y;
         lastValue = value;
       }
     });
-  
+
     // Draw signal name
     ctx.fillStyle = theme.palette.text.primary;
-    ctx.font = "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif";
+    ctx.font =
+      "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif";
     let signalName = signal.name;
     if (
       (signalName.startsWith("SW") || signalName.startsWith("LEDR")) &&
