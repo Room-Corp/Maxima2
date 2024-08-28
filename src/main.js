@@ -15,15 +15,6 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-ipcMain.on("modify-div", (event, divId) => {
-  // console.log("print working");
-  // const webContents = event.sender;
-  // webContents.executeJavaScript(`
-  //   const divElement = document.getElementById('${divId}');
-  //   console.log("Hello!");
-  //   divElement.style.backgroundColor = "red";
-  // `);
-});
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -33,6 +24,7 @@ const createWindow = () => {
       nodeIntegration: true,
       contextIsolation: false,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      vibrancy: "ultra-dark",
       //nodeIntegration: true,
     },
   });
@@ -46,9 +38,6 @@ const createWindow = () => {
 
 app.on("ready", createWindow);
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 let count = 0;
 let row = 0;
 let col = 0;
@@ -69,26 +58,22 @@ ipcMain.on("asynchronous-message", (event, terminalInfo) => {
   console.log("creating new instance");
 });
 
-// invoke handle? -- definitley
 ipcMain.handle("prepare-input", (event, terminalInfo) => {
   ptyProcess.onData((data) => {
     mainWindow.webContents.send("pty-data", data);
   });
 });
 
-// switch to invoke handle
 ipcMain.handle("user-input", (event, input) => {
   ptyProcess.write(input);
 });
 
-// invoke handle
 ipcMain.handle("save-file", (event, fileToSave, code) => {
   console.log(fileToSave);
   console.log(code);
   fs.writeFileSync(fileToSave, code);
 });
 
-// switch to invoke handle
 ipcMain.handle("get-directory", async (event, path) => {
   try {
     const files = await readdirS(path);
@@ -130,22 +115,6 @@ ipcMain.handle("get-code", async (event, filePath) => {
   }
 });
 
-function getTestbenchFilename(files, currentFileName) {
-  // Regular expression to match "testbench", "tb", and the current file name
-  const regex = new RegExp(`^${currentFileName}.*(testbench|tb)`, "i"); // "i" flag for case-insensitive matching
-
-  // Iterate over each file name
-  for (let i = 0; i < files.length; i++) {
-    console.log(files[i].name);
-    // Check if the current file name matches the regular expression
-    if (regex.test(files[i].name)) {
-      return files[i].name; // Return the matching file name
-    }
-  }
-
-  // Return null if none of the file names contain "testbench", "tb", or the current file name
-  return "not found";
-}
 const waitForFile = (filePath, timeout = 10000, interval = 100) => {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -163,7 +132,7 @@ const waitForFile = (filePath, timeout = 10000, interval = 100) => {
     checkFileExists();
   });
 };
-//currently we compile the files a very specialized way
+
 ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
   console.log(filePath);
   const shell = process.env[os.platform() === "win32" ? "COMSPEC" : "SHELL"];
@@ -188,15 +157,16 @@ ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
   console.log("file name is:" + name);
   // const files = await readdirS(folderPath);
 
-  // let testBenchFile = getTestbenchFilename(files, name);
   pt.onData((data) => {
     console.log("data is " + data);
   });
-  // console.log(extension);
 
-  // iverilog -g2012 -o simple.out simple.sv
-  //pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
-  //pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  /* Example commands:
+  iverilog -g2012 -o simple.out simple.sv
+  pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  pt.write("iverilog -g2012 -o example.out example_tb.sv example.sv \r");
+  */
+
   pt.write("iverilog -g2012 -o " + name + ".out " + fileName + " \r");
   pt.write("vvp " + name + ".out \r");
 
@@ -208,7 +178,7 @@ ipcMain.handle("get-vcd", async (event, filePath, folderPath) => {
 
     console.log("Attempting to read file at:", vcdPath);
 
-    await waitForFile(vcdPath, 10000, 500); // Wait for up to 10 seconds, checking every 500ms
+    await waitForFile(vcdPath, 10000, 500);
 
     if (fs.existsSync(vcdPath)) {
       console.log("File exists");
@@ -237,6 +207,3 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.

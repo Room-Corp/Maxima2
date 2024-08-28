@@ -20,11 +20,8 @@ import fileIconNew from "./icons/fileIconNew.png";
 import Popup from "reactjs-popup";
 import { parseVCD } from "./vcdParser.ts";
 import WaveformViewer from "./WaveformViewer.tsx";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
-//
-
 function useWindowDimensions() {
   const [windowDimensions, setWindowDimensions] = useState(
     getWindowDimensions(),
@@ -53,18 +50,13 @@ function getWindowDimensions() {
 function App() {
   const [TerminalDisplay, setTerminalDisplay] = useState(null);
   const [input, setInput] = useState("");
-  const [lastLine, setLastLine] = useState("");
   const [code, setCode] = useState("");
-  // const [file, setFile] = useState();
   const [filePath, setFilePath] = useState("");
   const [language, setLanguage] = useState("verilog");
   const [files, setFiles] = useState([]);
   const fitAddon = new FitAddon();
   const [terminal, setTerminal] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
   const { width, height } = useWindowDimensions();
-  const termPanelElement = getPanelElement("term-panel");
-  const [parseData, setParsedData] = useState();
 
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ["Terminal", "Wave Form Viewer"];
@@ -76,15 +68,16 @@ function App() {
 
   const [folderPath, setFolderPath] = useState([]);
 
-  // const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
-  //
+  // main components I can break up
+  // - Editor
+  // - Bottom tab that creates waveform viewer and
+  // - Top bar
+
   const [waveformData, setWaveformData] = useState(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
-
-    // Set up the model for the current file
     if (filePath) {
       const model =
         monaco.editor.getModel(monaco.Uri.file(filePath)) ||
@@ -521,12 +514,6 @@ function App() {
     setActiveFile(index);
     await setEditor(openFiles[index]);
   };
-
-  const darkTheme = createTheme({
-    palette: {
-      mode: "dark",
-    },
-  });
 
   return (
     <div id="container" style={styles.container}>
