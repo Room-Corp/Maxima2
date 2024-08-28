@@ -7,7 +7,7 @@ import {
   Select,
   MenuItem,
   IconButton,
-  useTheme,
+  createTheme,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { SelectChangeEvent } from "@mui/material/Select";
@@ -46,7 +46,13 @@ const StyledCanvas = styled("canvas")({
 });
 
 const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
-  const theme = useTheme();
+  const darkTheme = createTheme({
+    palette: {
+      mode: "dark",
+    },
+  });
+
+  const theme = darkTheme;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -552,7 +558,15 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
     return Object.entries(groupedSignals).map(([groupName, signals]) => {
       if (signals.length > 1 && (groupName === "SW" || groupName === "LEDR")) {
         return (
-          <Box key={groupName} sx={{ height: signalHeight, paddingLeft: 2 }}>
+          <Box
+            key={groupName}
+            sx={{
+              height: signalHeight,
+              paddingLeft: 2,
+              color: "white",
+              bgcolor: "#121212",
+            }}
+          >
             <Select
               value={expandedSignals[groupName] ? "expanded" : "collapsed"}
               onChange={(e: SelectChangeEvent) =>
@@ -562,7 +576,7 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
                 })
               }
               size="small"
-              sx={{ fontSize: 14 }}
+              sx={{ fontSize: 14, color: "white", bgcolor: "#121212" }}
             >
               <MenuItem value="collapsed">
                 {groupName} [{signals.length - 1}:0]
@@ -583,6 +597,8 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
               textOverflow: "ellipsis",
               fontSize: 14,
               lineHeight: `${signalHeight}px`,
+              color: "white",
+              bgcolor: "#121212",
             }}
           >
             {signal.name}
@@ -598,7 +614,13 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
 
   return (
     <StyledBox
-      sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        color: "white",
+        bgcolor: "#121212",
+      }}
     >
       <Box
         sx={{
@@ -607,9 +629,19 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
           alignItems: "center",
           borderBottom: 1,
           borderColor: "divider",
+          color: "white",
+          bgcolor: "#121212",
         }}
       >
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            flexGrow: 1,
+            fontWeight: 600,
+            color: "white",
+            bgcolor: "#121212",
+          }}
+        >
           Waveform Viewer
         </Typography>
         <IconButton onClick={handleZoomOut} aria-label="Zoom out">
@@ -625,7 +657,15 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
           label="Show Details"
         />
       </Box>
-      <Box sx={{ flexGrow: 1, display: "flex", overflow: "hidden" }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          overflow: "hidden",
+          color: "white",
+          bgcolor: "#121212",
+        }}
+      >
         <Box
           ref={sidebarRef}
           sx={{
@@ -633,7 +673,8 @@ const WaveformViewer: React.FC<WaveformViewerProps> = ({ data }) => {
             overflowY: "auto",
             borderRight: 1,
             borderColor: "divider",
-            bgcolor: "background.paper",
+            color: "white",
+            bgcolor: "#121212",
           }}
         >
           {renderSignalNames()}
