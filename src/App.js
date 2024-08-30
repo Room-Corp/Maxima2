@@ -21,6 +21,8 @@ import Popup from "reactjs-popup";
 import { parseVCD } from "./vcdParser.ts";
 import WaveformViewer from "./WaveformViewer.tsx";
 
+import TerminalComponent from "./components/TerminalPanel.tsx";
+
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 function useWindowDimensions() {
   const [windowDimensions, setWindowDimensions] = useState(
@@ -68,14 +70,11 @@ function App() {
 
   const [folderPath, setFolderPath] = useState([]);
 
-  // main components I can break up
-  // - Editor
-  // - Bottom tab that creates waveform viewer and
-  // - Top bar
-
   const [waveformData, setWaveformData] = useState(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
+  const folderInput = useRef(null);
 
+  // Mounting the editor --> Editor
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     if (filePath) {
@@ -86,7 +85,7 @@ function App() {
     }
   }
 
-  // Effect to update the editor model when the file changes
+  // Effect to update the editor model when the file changes --> Editor
   useEffect(() => {
     if (editorRef.current && filePath) {
       const editor = editorRef.current;
@@ -105,67 +104,19 @@ function App() {
     }
   }, [filePath, language]);
 
-  useEffect(() => {
-    const loadPresetVCDFile = async () => {
-      setIsLoadingWaveform(true);
-      try {
-        // Assuming you have a method to get the VCD file content
-        const vcdContent = await ipcRenderer.invoke("get-vcd");
-        const parsedData = await parseVCD(vcdContent);
-        setWaveformData(parsedData);
-      } catch (error) {
-        console.error("Error loading preset VCD file:", error);
-      } finally {
-        setIsLoadingWaveform(false);
-      }
-    };
-
-    loadPresetVCDFile();
-  }, []);
-
-  const folderInput = useRef(null);
+  // opens wave form --> BottomBar
   const openWaveForm = async () => {
     console.log("file has bene found");
 
     const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
     const parsedData = await parseVCD(vcdFile);
     setWaveformData(parsedData);
-
-    // switch this to work with relative paths
-    // const invokeReturn = await ipcRenderer.invoke(
-    //   "get-code",
-    //   "/Users/farhankhan/Maxima2/src/test/example.vcd",
-    // );
-    // console.log(invokeReturn);
-    // console.log("filedone");
-    // parser.parse_str(invokeReturn);
-    // console.log(parser);
-    // setParsedData(parser.scope.toJson());
-    //console.log("json String is");
-    //console.log(jsonString);
   };
 
-  useEffect(() => {
-    console.log(folderInput);
-  }, [folderInput]);
-
-  useEffect(() => {
-    console.log("ran");
-    ipcRenderer.on("pty-data", (event, data) => {
-      if (data && TerminalDisplay) {
-        console.log("data: " + data);
-        TerminalDisplay.write(data);
-      } else {
-        console.log("bozo");
-      }
-    });
-    return () => {
-      ipcRenderer.removeAllListeners("pty-data");
-    };
-  });
-
+  // Move to editor
   loader.config({ monaco });
 
+  // leave this in main or abstract to css class
   const styles = {
     container: {
       backgroundColor: "#141414",
@@ -179,14 +130,7 @@ function App() {
       paddingBottom: "0px",
       padding: 0,
     },
-    terminalContainer: {
-      // Set maximum height to fit within viewport
-      //overflow: "hidden", // Hide overflow content
-      //display: "block",
-      //position: "absolute",  /* Matches padding-bottom on .terminal-outer-container */
-      // height:"100%",
-      //borderTop: "10px solid #f0f0f0",
-    },
+    terminalContainer: {},
     terminal: {
       bottom: 0,
       margin: 0,
@@ -196,15 +140,8 @@ function App() {
       width: "100%",
       height: "100%",
       paddingBottom: "2%",
-      //  backgroundColor: "#f0f0f",
-      overflowY: "auto",
-      //float:"bo
-      // position:"absolute",
-      //  borderTop: "2px solid #565656",
-      //padding: "10px" ,
-      // position: "fixed"
 
-      //overflow:"auto",
+      overflowY: "auto",
     },
     editor: {
       width: "100%",
@@ -216,7 +153,6 @@ function App() {
       margin: 0,
       width: "100%",
       height: "100vw",
-      //padding: 1rem;
 
       backgroundColor: "#1e1d1e" /* Change the background color as desired */,
     },
@@ -227,7 +163,6 @@ function App() {
       height: "100%",
       width: "100%",
       height: "80vw",
-      // backgroundColor: "#1e1d1e" /* Change the background color as desired */,
     },
 
     tabIst: {
@@ -251,50 +186,8 @@ function App() {
       color: "white",
     },
   };
-  const onTermInit = (term) => {
-    setTerminalDisplay(term);
-    term.reset();
-    // term.loadAddon();
 
-    //term.open(document.getElementById('terminal'));
-    //fitAddon.fit();
-
-    const terminalInfo = {
-      rows: term.rows,
-      cols: term.cols,
-      // Add other necessary properties here
-    };
-    ipcRenderer.send("asynchronous-message", terminalInfo);
-    ipcRenderer.invoke("prepare-input", terminalInfo);
-    handleResize(40);
-  };
-
-  const onTermDispose = (term) => {
-    setTerminalDisplay(null);
-  };
-
-  let count = 0;
-  const handleData = (data) => {
-    if (TerminalDisplay) {
-      const code = data.charCodeAt(0);
-      // If the user hits enter, submit the input
-      if (code === 13) {
-        ipcRenderer.invoke("user-input", input + "\r"); // Send input to pty
-        console.log("input is " + input);
-        setInput(""); // Clear the input
-      } else if (code == 127) {
-        console.log(input.length);
-        setInput((prevInput) => prevInput.substring(0, prevInput.length - 1));
-        TerminalDisplay.write("\x1b[D\x1b[P");
-        //TerminalDisplay.resize(100,);
-      } else {
-        TerminalDisplay.write(data);
-        //console.log("data is" + data);
-        setInput((prevInput) => prevInput + data);
-      }
-    }
-  };
-
+  // folder change I am guessing this should be a callback
   const folderOnChange = async (e) => {
     if (!e.target.files?.length) return;
     const files = e.target.files;
@@ -312,18 +205,14 @@ function App() {
     setFolderPath(folder);
   };
 
+  // saves the file --> top bar (might be deleted once the key feedback is added or whatever)
   const saveFile = () => {
     console.log(filePath);
     console.log(code);
     ipcRenderer.invoke("save-file", filePath, code);
   };
 
-  // maybe I make a list with maps --> then list of inside files?
-
-  // function Item(props) {
-  //   return <li>{props.value}</li>;
-  // }
-
+  // sidebar, list of files in current directory
   function MyList({ items }) {
     if (items.length == 0) {
       return <div>No items to display</div>;
@@ -362,13 +251,17 @@ function App() {
     );
   }
 
+  // Side Bar
   const handleMouseEnter = (e) => {
     e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Change background color on hover
   };
 
+  // Side Bar
   const handleMouseLeave = (e) => {
     e.currentTarget.style.backgroundColor = "transparent"; // Reset background color on mouse leave
   };
+
+  // Side Bar
   const renderFileIcon = (fileName) => {
     const extension = fileName.split(".").pop().toLowerCase();
     switch (extension) {
@@ -407,6 +300,8 @@ function App() {
         );
     }
   };
+
+  // Sets the language from the current file extension --> Editor
   function getLanguageFromExtension(fileName) {
     const extension = fileName.split(".").pop().toLowerCase();
     switch (extension) {
@@ -427,14 +322,12 @@ function App() {
     }
   }
 
+  // Set's the language of the editor from the file --> Editor
   async function setEditorFromFile(fileName) {
     // add function to check if directory here !
-    //
-
     let finalName = fileName.path + "/" + fileName.name;
 
     const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
-    //console.log(invokeReturn);
 
     let typist = typeof invokeReturn;
     if (typist == "string") {
@@ -468,6 +361,8 @@ function App() {
       console.log("opening new folder");
     }
   }
+
+  // Sets the editor's contents based on the file --> Editor
   async function setEditor(fileName) {
     let finalName = fileName.path + "/" + fileName.name;
     const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
@@ -481,6 +376,7 @@ function App() {
       console.log("opening new folder");
     }
   }
+  // TopBar ?? Add's tab to editor
   const addTab = async (fileName) => {
     //const finalName = fileName.path + "/" + fileName.name;
     setOpenTab((prevOpenTabs) => [...prevOpenTabs, fileName.name]);
@@ -500,16 +396,15 @@ function App() {
     }
   }
 
+  // Bottom bar tab click -- Opens wave form --> Bottom Bar
   const handleTabClick = (index) => {
     if (index == 1) {
       openWaveForm();
     }
-    if (index == 2) {
-      // openWaveDrom();
-    }
     setActiveTab(index);
   };
 
+  // sets editor based on clicked file
   const handleFileClick = async (index) => {
     setActiveFile(index);
     await setEditor(openFiles[index]);
@@ -700,17 +595,7 @@ function App() {
                 <div className={styles.tabContent}>
                   {activeTab === 0 && (
                     <div style={styles.terminal}>
-                      <Xterm
-                        ref={(ref) => {
-                          setTerminal(ref ? ref.getTerminal() : null);
-                        }}
-                        onInit={onTermInit}
-                        onDispose={onTermDispose}
-                        onData={handleData}
-                        fontSize={14}
-                        // scrollBack={}
-                        //ssr={false}
-                      />
+                      <TerminalComponent />
                     </div>
                   )}
                   {activeTab === 1 && (

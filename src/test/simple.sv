@@ -40,6 +40,7 @@ case (ps)
 				else ns = outer;
 endcase
 end
+endmodule
 
 // Output logic - could also be another always_comb block.
 
