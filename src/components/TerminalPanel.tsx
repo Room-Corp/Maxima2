@@ -1,4 +1,5 @@
 // can now throw this into a container, which would fix resize issues, but for now let's keep trucking
+// need to change color
 
 import React, { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");

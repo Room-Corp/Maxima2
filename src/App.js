@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");
@@ -22,6 +24,7 @@ import { parseVCD } from "./vcdParser.ts";
 import WaveformViewer from "./WaveformViewer.tsx";
 
 import TerminalComponent from "./components/TerminalPanel.tsx";
+import Sidebar from "./components/SidePanel.tsx";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 function useWindowDimensions() {
@@ -210,95 +213,6 @@ function App() {
     console.log(filePath);
     console.log(code);
     ipcRenderer.invoke("save-file", filePath, code);
-  };
-
-  // sidebar, list of files in current directory
-  function MyList({ items }) {
-    if (items.length == 0) {
-      return <div>No items to display</div>;
-    }
-
-    return (
-      <div>
-        {items.map((item, index) => (
-          <div
-            key={index}
-            style={{ padding: "2px", fontSize: "14px" }}
-            onClick={() => setEditorFromFile(item)}
-          >
-            <li
-              style={{
-                listStyleType: "none",
-                display: "flex",
-                alignItems: "center",
-                backgroundColor: "transparent", // Set initial background color
-                transition: "background-color 0.3s ease", // Add transition for smooth effect
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => handleMouseEnter(e)}
-              onMouseLeave={(e) => handleMouseLeave(e)}
-            >
-              <div
-                style={{ display: "flex", flexDirection: "row", gap: "10px" }}
-              >
-                {renderFileIcon(item.name)}
-                <p>{item.name.replace("Name: ", "")}</p>
-              </div>
-            </li>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Side Bar
-  const handleMouseEnter = (e) => {
-    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Change background color on hover
-  };
-
-  // Side Bar
-  const handleMouseLeave = (e) => {
-    e.currentTarget.style.backgroundColor = "transparent"; // Reset background color on mouse leave
-  };
-
-  // Side Bar
-  const renderFileIcon = (fileName) => {
-    const extension = fileName.split(".").pop().toLowerCase();
-    switch (extension) {
-      case "v":
-        return (
-          <img
-            src={verilogIcon}
-            style={{
-              paddingTop: "8px",
-              width: "24px", // Increase the width
-              height: "24px", // Increase the height
-              objectFit: "contain",
-              paddingLeft: "4px",
-            }}
-          />
-        );
-      case "sv":
-        return (
-          <img
-            src={systemVerilogIcon}
-            style={{
-              paddingTop: "8px",
-              paddingLeft: "4px",
-              height: "24px" /* Container height */,
-              width: "24px" /* Container width */,
-              objectFit: "cover",
-            }}
-          />
-        );
-      default:
-        return (
-          <img
-            src={fileIconNew}
-            style={{ paddingTop: "12px", height: "24px", width: "24px" }}
-          />
-        );
-    }
   };
 
   // Sets the language from the current file extension --> Editor
@@ -492,7 +406,7 @@ function App() {
       <PanelGroup direction="horizontal">
         <Panel minSize={5} defaultSize={10} maxSize={25}>
           <div id="sideBary" style={styles.sideBar}>
-            <MyList items={files} />
+            <Sidebar items={files} setEditorFromFile={setEditorFromFile} />
           </div>
         </Panel>
         <PanelResizeHandle style={{ border: "0.5px solid #404040" }} />

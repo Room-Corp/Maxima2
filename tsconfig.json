@@ -1,13 +1,43 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "module": "commonjs",
     "target": "es6",
-    "jsx": "react",
+    "module": "commonjs",
+    "lib": ["dom", "es6", "es2017", "esnext.asynciterable"],
+    "sourceMap": true,
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "removeComments": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "allowJs": true,
+    "checkJs": true,
+    "jsx": "react",
+    "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*"]
+  "exclude": ["node_modules"],
+  "include": [
+    "./src/**/*.tsx",
+    "./src/**/*.ts",
+    "./src/**/*.js",
+    "./src/**/*.jsx",
+    "./src/**/*.png",
+    "./src/**/*.svg",
+    "./src/**/*.jpg",
+    "./src/**/*.jpeg",
+    "./src/**/*.gif"
+  ]
 }

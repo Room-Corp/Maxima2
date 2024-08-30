@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 const { app, ipcMain, BrowserWindow } = require("electron");
 const path = require("path");
 //var Terminal = require('xterm').Terminal;

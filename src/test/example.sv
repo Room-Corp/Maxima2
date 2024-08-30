@@ -21,7 +21,7 @@ module example (
 endmodule
 
 
-
+module example_tb();
     logic clk_in;
     logic rst_in;
     logic [5:0] a_in, b_in;
