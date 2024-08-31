@@ -1,11 +1,12 @@
 // @ts-nocheck
 
+/*
+major unsolved piece to fully break up components handling state of current files
+should i use a hook or a container class
+*/
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");
-import { Xterm } from "xterm-react";
-import "xterm/css/xterm.css";
-import { FitAddon } from "xterm-addon-fit";
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import {
@@ -25,6 +26,7 @@ import WaveformViewer from "./WaveformViewer.tsx";
 
 import TerminalComponent from "./components/TerminalPanel.tsx";
 import Sidebar from "./components/SidePanel.tsx";
+import EditorCopmponent from "./components/EditorPanel.tsx";
 
 // save original code, if new is different from original, then prompt user to save once user saves update original.
 function useWindowDimensions() {
@@ -53,14 +55,11 @@ function getWindowDimensions() {
 }
 
 function App() {
-  const [TerminalDisplay, setTerminalDisplay] = useState(null);
-  const [input, setInput] = useState("");
   const [code, setCode] = useState("");
   const [filePath, setFilePath] = useState("");
   const [language, setLanguage] = useState("verilog");
   const [files, setFiles] = useState([]);
-  const fitAddon = new FitAddon();
-  const [terminal, setTerminal] = useState(null);
+
   const { width, height } = useWindowDimensions();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -88,7 +87,7 @@ function App() {
     }
   }
 
-  // Effect to update the editor model when the file changes --> Editor
+  // Effect to update the editor model when the file changes
   useEffect(() => {
     if (editorRef.current && filePath) {
       const editor = editorRef.current;
@@ -122,13 +121,12 @@ function App() {
   // leave this in main or abstract to css class
   const styles = {
     container: {
-      backgroundColor: "#141414",
       color: "white",
       height: "100%",
       display: "flex",
-      // alignItems: "center",
+
       flexDirection: "column",
-      // padding: 0,
+
       margin: 0,
       paddingBottom: "0px",
       padding: 0,
@@ -157,7 +155,7 @@ function App() {
       width: "100%",
       height: "100vw",
 
-      backgroundColor: "#1e1d1e" /* Change the background color as desired */,
+      backgroundColor: "transparent",
     },
     waveFormPanel: {
       top: 0,
@@ -170,11 +168,14 @@ function App() {
 
     tabIst: {
       borderTop: "1px solid #404040",
-      backgroundColor: "#565656",
+      backgroundColor: "#141414",
+      height: "100%",
     },
+    tabContent: { backgroundColor: "#141414", height: "100%" },
 
     tabManager: {
-      backgroundColor: "#565656",
+      backgroundColor: "#141414",
+      height: "100%",
     },
     fileManager: {
       display: "flex",
@@ -187,6 +188,7 @@ function App() {
       alignItems: "center",
       height: "100%",
       color: "white",
+      backgroundColor: "#141414",
     },
   };
 
@@ -237,21 +239,26 @@ function App() {
   }
 
   // Set's the language of the editor from the file --> Editor
-  async function setEditorFromFile(fileName) {
+  async function setEditorFromFile(fileName, model) {
     // add function to check if directory here !
+    // now first let's check the model and move from there
+    // pass in as callback with optional model functionality
+    // if model is undefined then let's go through the process otherwise lets set the model
+
     let finalName = fileName.path + "/" + fileName.name;
 
+    console.log("setEditorFrom File");
     const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
 
     let typist = typeof invokeReturn;
     if (typist == "string") {
-      if (openTabs.indexOf(fileName.name) == -1) {
+      if (openTabs.indexOf(fileName.name) === -1) {
         addTab(fileName);
+        setCode(invokeReturn);
       } else {
         setActiveFile(openTabs.indexOf(fileName.name));
       }
 
-      setCode(invokeReturn);
       //console.log(newCode);
       let newLanguage = "javascript";
       const extension = finalName.split(".").pop();
@@ -277,19 +284,7 @@ function App() {
   }
 
   // Sets the editor's contents based on the file --> Editor
-  async function setEditor(fileName) {
-    let finalName = fileName.path + "/" + fileName.name;
-    const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
 
-    if (typeof invokeReturn === "string") {
-      setCode(invokeReturn);
-      let newLanguage = getLanguageFromExtension(finalName);
-      setLanguage(newLanguage);
-      setFilePath(finalName);
-    } else {
-      console.log("opening new folder");
-    }
-  }
   // TopBar ?? Add's tab to editor
   const addTab = async (fileName) => {
     //const finalName = fileName.path + "/" + fileName.name;
@@ -297,18 +292,6 @@ function App() {
     setOpenFile((prevOpenFiles) => [...prevOpenFiles, fileName]);
     setActiveFile(openFiles.length);
   };
-  function handleResize(size) {
-    if (TerminalDisplay) {
-      console.log(size);
-      // TerminalDisplay.open(document.getElementById('terminalC'));
-      // fitAddon.fit();
-      // console.log(TerminalDisplay.getFont());
-      let cols = Math.floor(width / 14);
-      let rows = Math.floor((height * (size / 100)) / 24);
-      TerminalDisplay.resize(cols, rows);
-      // let font = TerminalDisplay?.getFont().charHeight;
-    }
-  }
 
   // Bottom bar tab click -- Opens wave form --> Bottom Bar
   const handleTabClick = (index) => {
@@ -321,7 +304,7 @@ function App() {
   // sets editor based on clicked file
   const handleFileClick = async (index) => {
     setActiveFile(index);
-    await setEditor(openFiles[index]);
+    await setEditorFromFile(openFiles[index]);
   };
 
   return (
@@ -416,6 +399,7 @@ function App() {
               <div
                 style={{
                   backgroundColor: "#141414",
+
                   display: "flex",
                   flexDirection: "row",
                 }}
@@ -452,35 +436,23 @@ function App() {
             <Panel minSize={25} defaultSize={75}>
               {openFiles.length > 0 && (
                 <div style={styles.editor}>
-                  <Editor
-                    height="90vh"
+                  <EditorCopmponent
                     language={language}
-                    value={code}
-                    path={filePath} // Add this line
-                    theme="vs-dark"
-                    onChange={(newCode) => {
-                      setCode(newCode);
-                    }}
-                    onMount={handleEditorDidMount}
-                    options={{
-                      minimap: {
-                        enabled: false,
-                      },
-                      // Enable linting
-                      lint: {
-                        enabled: true,
-                      },
-                    }}
+                    code={code}
+                    filePath={filePath}
                   />
                 </div>
               )}
             </Panel>
-            <PanelResizeHandle style={{ borderTop: "1px solid #404040" }} />
+            <PanelResizeHandle
+              style={{
+                borderTop: "1px solid #404040",
+              }}
+            />
             <Panel
-              id="term-panel"
+              style={{ backgroundColor: "#141414" }}
               minSize={10}
               defaultSize={40}
-              onResize={(size) => handleResize(size)}
             >
               <div className={styles.tabManager}>
                 <div className={{ backgroundColor: "#141414" }}>
@@ -506,9 +478,9 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <div className={styles.tabContent}>
+                <div style={{ ...styles.tabContent, overflow: "auto" }}>
                   {activeTab === 0 && (
-                    <div style={styles.terminal}>
+                    <div>
                       <TerminalComponent />
                     </div>
                   )}

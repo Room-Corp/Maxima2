@@ -9,6 +9,9 @@ interface Props {
 }
 
 const Sidebar: React.FC<Props> = ({ items, setEditorFromFile }) => {
+  // add array of files in here --> with a file context
+  // another piece now to figure out is handlign active tab but if i make a context i can abstract the rest of that
+
   const handleMouseEnter = (e: React.MouseEvent<HTMLLIElement>) => {
     e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
   };

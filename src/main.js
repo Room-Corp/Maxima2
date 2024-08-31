@@ -22,11 +22,16 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    transparency: true,
+    backgroundColor: "#00000000", // transparent hexadecimal or anything with transparency,
+    vibrancy: "under-window", // in my case...
+    visualEffectState: "followWindow",
+
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      vibrancy: "ultra-dark",
+
       //nodeIntegration: true,
     },
   });
@@ -35,8 +40,8 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   mainWindow.maximize();
+  mainWindow.openDevTools();
 };
-// mainWindow.webContents.openDevTools();
 
 app.on("ready", createWindow);
 

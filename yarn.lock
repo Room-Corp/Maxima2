@@ -4710,10 +4710,10 @@ monaco-editor-webpack-plugin@^7.1.0:
   dependencies:
     loader-utils "^2.0.2"
 
-monaco-editor@^0.47.0:
-  version "0.47.0"
-  resolved "https://registry.npmmirror.com/monaco-editor/-/monaco-editor-0.47.0.tgz#39865d67e0c9fb8c6b49e760bf9caf6a6650d28e"
-  integrity sha512-VabVvHvQ9QmMwXu4du008ZDuyLnHs9j7ThVFsiJoXSOQk18+LF89N4ADzPbFenm0W4V2bGHnFBztIRQTgBfxzw==
+monaco-editor@^0.51.0:
+  version "0.51.0"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.51.0.tgz#922a6103f6742b5a62fbb097276c5a6619d879db"
+  integrity sha512-xaGwVV1fq343cM7aOYB6lVE4Ugf0UyimdD/x5PWcWBMKENwectaEu77FAN7c5sFiyumqeJdX1RPTh1ocioyDjw==
 
 ms@2.0.0:
   version "2.0.0"
