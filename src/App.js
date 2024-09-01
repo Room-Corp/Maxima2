@@ -28,36 +28,25 @@ import TerminalComponent from "./components/TerminalPanel.tsx";
 import Sidebar from "./components/SidePanel.tsx";
 import EditorCopmponent from "./components/EditorPanel.tsx";
 
+import { useEditor } from "./hooks/useEditorFunctions.ts";
+import { useWindowDimensions } from "./hooks/useWindowDimensions.ts";
+
+// window dimensions hook --> figure out how to make this one
 // save original code, if new is different from original, then prompt user to save once user saves update original.
-function useWindowDimensions() {
-  const [windowDimensions, setWindowDimensions] = useState(
-    getWindowDimensions(),
-  );
-
-  useEffect(() => {
-    function handleResize2() {
-      setWindowDimensions(getWindowDimensions());
-    }
-
-    window.addEventListener("resize", handleResize2);
-    return () => window.removeEventListener("resize", handleResize2);
-  }, []);
-
-  return windowDimensions;
-}
-
-function getWindowDimensions() {
-  const { innerWidth: width, innerHeight: height } = window;
-  return {
-    width,
-    height,
-  };
-}
-
 function App() {
-  const [code, setCode] = useState("");
-  const [filePath, setFilePath] = useState("");
-  const [language, setLanguage] = useState("verilog");
+  const {
+    code,
+    setCode,
+    filePath,
+    language,
+    openTabs,
+    openFiles,
+    activeFile,
+    saveFile,
+    setEditorFromFile,
+    addTab,
+    handleFileClick,
+  } = useEditor();
   const [files, setFiles] = useState([]);
 
   const { width, height } = useWindowDimensions();
@@ -66,45 +55,10 @@ function App() {
   const tabs = ["Terminal", "Wave Form Viewer"];
   const editorRef = useRef(null);
 
-  const [openTabs, setOpenTab] = useState([]);
-  const [openFiles, setOpenFile] = useState([]);
-  const [activeFile, setActiveFile] = useState(-1);
-
   const [folderPath, setFolderPath] = useState([]);
 
   const [waveformData, setWaveformData] = useState(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
-  const folderInput = useRef(null);
-
-  // Mounting the editor --> Editor
-  function handleEditorDidMount(editor, monaco) {
-    editorRef.current = editor;
-    if (filePath) {
-      const model =
-        monaco.editor.getModel(monaco.Uri.file(filePath)) ||
-        monaco.editor.createModel(code, language, monaco.Uri.file(filePath));
-      editor.setModel(model);
-    }
-  }
-
-  // Effect to update the editor model when the file changes
-  useEffect(() => {
-    if (editorRef.current && filePath) {
-      const editor = editorRef.current;
-      const model = editor.getModel();
-
-      if (
-        !model ||
-        model.uri.toString() !== monaco.Uri.file(filePath).toString()
-      ) {
-        const newModel =
-          monaco.editor.getModel(monaco.Uri.file(filePath)) ||
-          monaco.editor.createModel(code, language, monaco.Uri.file(filePath));
-        editor.setModel(newModel);
-        setEditorContent(code);
-      }
-    }
-  }, [filePath, language]);
 
   // opens wave form --> BottomBar
   const openWaveForm = async () => {
@@ -192,6 +146,7 @@ function App() {
     },
   };
 
+  // file system hook
   // folder change I am guessing this should be a callback
   const folderOnChange = async (e) => {
     if (!e.target.files?.length) return;
@@ -210,101 +165,12 @@ function App() {
     setFolderPath(folder);
   };
 
-  // saves the file --> top bar (might be deleted once the key feedback is added or whatever)
-  const saveFile = () => {
-    console.log(filePath);
-    console.log(code);
-    ipcRenderer.invoke("save-file", filePath, code);
-  };
-
-  // Sets the language from the current file extension --> Editor
-  function getLanguageFromExtension(fileName) {
-    const extension = fileName.split(".").pop().toLowerCase();
-    switch (extension) {
-      case "css":
-      case "html":
-      case "python":
-      case "dart":
-      case "json":
-        return extension;
-      case "lock":
-        return "yaml";
-      case "sv":
-        return "systemverilog";
-      case "v":
-        return "verilog";
-      default:
-        return "plaintext";
-    }
-  }
-
-  // Set's the language of the editor from the file --> Editor
-  async function setEditorFromFile(fileName, model) {
-    // add function to check if directory here !
-    // now first let's check the model and move from there
-    // pass in as callback with optional model functionality
-    // if model is undefined then let's go through the process otherwise lets set the model
-
-    let finalName = fileName.path + "/" + fileName.name;
-
-    console.log("setEditorFrom File");
-    const invokeReturn = await ipcRenderer.invoke("get-code", finalName);
-
-    let typist = typeof invokeReturn;
-    if (typist == "string") {
-      if (openTabs.indexOf(fileName.name) === -1) {
-        addTab(fileName);
-        setCode(invokeReturn);
-      } else {
-        setActiveFile(openTabs.indexOf(fileName.name));
-      }
-
-      //console.log(newCode);
-      let newLanguage = "javascript";
-      const extension = finalName.split(".").pop();
-      console.log(extension);
-      if (["css", "html", "python", "dart", "json"].includes(extension)) {
-        newLanguage = extension;
-      } else if ("lock".includes(extension)) {
-        newLanguage = "yaml";
-      } else if ("sv".includes(extension)) {
-        newLanguage = "systemverilog";
-      } else if ("v".includes(extension)) {
-        newLanguage = "verilog";
-      } else {
-        newLanguage = "plaintext";
-      }
-      setLanguage(newLanguage);
-      console.log(newLanguage + "new language ");
-      console.log(language + "language");
-      setFilePath(finalName);
-    } else {
-      console.log("opening new folder");
-    }
-  }
-
-  // Sets the editor's contents based on the file --> Editor
-
-  // TopBar ?? Add's tab to editor
-  const addTab = async (fileName) => {
-    //const finalName = fileName.path + "/" + fileName.name;
-    setOpenTab((prevOpenTabs) => [...prevOpenTabs, fileName.name]);
-    setOpenFile((prevOpenFiles) => [...prevOpenFiles, fileName]);
-    setActiveFile(openFiles.length);
-  };
-
   // Bottom bar tab click -- Opens wave form --> Bottom Bar
   const handleTabClick = (index) => {
     if (index == 1) {
       openWaveForm();
     }
     setActiveTab(index);
-  };
-
-  // sets editor based on clicked file
-  const handleFileClick = async (index) => {
-    setActiveFile(index);
-    await setEditorFromFile(openFiles[index]);
   };
 
   return (

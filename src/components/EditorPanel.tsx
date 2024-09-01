@@ -5,6 +5,15 @@ import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 const { ipcRenderer } = window.require("electron");
 
+/*
+Goal is to create hooks where I pass in language code and file path
+const [state, setState] = useState(props)
+
+ useEffect(() => {
+   setState(props.something)
+ }, [props.something])
+  */
+
 interface Props {
   language: string;
   code: string;
