@@ -1,14 +1,8 @@
 // @ts-nocheck
-
-/*
-major unsolved piece to fully break up components handling state of current files
-should i use a hook or a container class
-*/
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 const { ipcRenderer } = window.require("electron");
-import Editor, { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
+
 import {
   Panel,
   PanelGroup,
@@ -17,13 +11,9 @@ import {
 } from "react-resizable-panels";
 import saveIcon from "./icons/saveicon.png";
 import openIcon from "./icons/openfile.png";
-import verilogIcon from "./icons/verilog.png";
-import systemVerilogIcon from "./icons/svicon2.png";
-import fileIconNew from "./icons/fileIconNew.png";
 import Popup from "reactjs-popup";
 import { parseVCD } from "./vcdParser.ts";
 import WaveformViewer from "./WaveformViewer.tsx";
-
 import TerminalComponent from "./components/TerminalPanel.tsx";
 import Sidebar from "./components/SidePanel.tsx";
 import EditorCopmponent from "./components/EditorPanel.tsx";
@@ -33,6 +23,19 @@ import { useWindowDimensions } from "./hooks/useWindowDimensions.ts";
 
 // window dimensions hook --> figure out how to make this one
 // save original code, if new is different from original, then prompt user to save once user saves update original.
+// potentially remove tabbing from here as well --> move it to it's own function we will see how well this works out
+// i think what's beneficial here is that the tabbing can be removed and passed to props the editor layout component
+
+/*
+Remaining Pieces to Abstract Out 🔎:
+- Bottom Bar (terminal handling)
+- Top bar (file handling)
+
+
+After these pieces are done can start building out new UI
+
+*/
+
 function App() {
   const {
     code,
@@ -42,35 +45,29 @@ function App() {
     openTabs,
     openFiles,
     activeFile,
-    saveFile,
+    saveFile, // take out save file --> instead will take a prop to the current file in it's own hook
     setEditorFromFile,
     addTab,
     handleFileClick,
   } = useEditor();
+
   const [files, setFiles] = useState([]);
-
   const { width, height } = useWindowDimensions();
-
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ["Terminal", "Wave Form Viewer"];
-  const editorRef = useRef(null);
-
   const [folderPath, setFolderPath] = useState([]);
-
   const [waveformData, setWaveformData] = useState(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
 
   // opens wave form --> BottomBar
   const openWaveForm = async () => {
     console.log("file has bene found");
-
     const vcdFile = await ipcRenderer.invoke("get-vcd", filePath, folderPath);
     const parsedData = await parseVCD(vcdFile);
     setWaveformData(parsedData);
   };
 
   // Move to editor
-  loader.config({ monaco });
 
   // leave this in main or abstract to css class
   const styles = {
@@ -85,7 +82,6 @@ function App() {
       paddingBottom: "0px",
       padding: 0,
     },
-    terminalContainer: {},
     terminal: {
       bottom: 0,
       margin: 0,
@@ -147,7 +143,8 @@ function App() {
   };
 
   // file system hook
-  // folder change I am guessing this should be a callback
+  // this will be handled my top bar --> moved to hook with all file data --> top bar will take props for these
+
   const folderOnChange = async (e) => {
     if (!e.target.files?.length) return;
     const files = e.target.files;
